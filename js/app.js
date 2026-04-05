@@ -128,7 +128,7 @@ async function loadVentes() {
 
         const data = await res.json();
 
-        console.log("Ventes:", data); // 🔥 REGARDE ICI
+        console.log("DEBUG VENTES:", data); // 🔥 IMPORTANT
 
         if (!data || data.length === 0) {
             el.innerHTML = "<li>Aucune vente</li>";
@@ -141,14 +141,8 @@ async function loadVentes() {
 
             const date = f.date_facture || "Date inconnue";
 
-            // 🔥 correction montant
-            let montant = f.total_ttc;
-
-            if (!montant || montant === null) {
-                montant = 0;
-            }
-
-            montant = Number(montant).toLocaleString();
+            // 🔥 on utilise EXACTEMENT le même champ que le graphique
+            const montant = Number(f.total_ttc || 0).toLocaleString();
 
             html += `
                 <li>
