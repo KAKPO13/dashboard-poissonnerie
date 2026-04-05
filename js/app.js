@@ -172,19 +172,24 @@ async function loadAlertes() {
         const data = await res.json();
 
         let html = "";
-        let aujourdHui = new Date();
+
+        // 🔥 aujourd’hui sans heure
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         data.forEach(p => {
 
             if (!p.date_expiration) return;
 
             const dateExp = new Date(p.date_expiration);
+            dateExp.setHours(0, 0, 0, 0);
 
-            // 🔥 différence en jours
-            const diff = (dateExp - aujourdHui) / (1000 * 60 * 60 * 24);
+            const diffDays = (dateExp - today) / (1000 * 60 * 60 * 24);
 
-            // ⚠️ expire aujourd’hui ou demain
-            if (diff <= 1) {
+            console.log(p.nom, diffDays); // 🔥 DEBUG
+
+            // 🔥 aujourd’hui OU demain
+            if (diffDays <= 1) {
 
                 html += `
                     <li style="color:red;">
