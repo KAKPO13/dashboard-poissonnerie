@@ -161,6 +161,53 @@ async function loadVentes() {
     }
 }
 
+async function loadAlertes() {
+
+    const el = document.getElementById("alertes");
+    el.innerHTML = "<li>Chargement...</li>";
+
+    try {
+
+        const res = await fetch("/.netlify/functions/produits");
+        const data = await res.json();
+
+        let html = "";
+        let aujourdHui = new Date();
+
+        data.forEach(p => {
+
+            if (!p.date_expiration) return;
+
+            const dateExp = new Date(p.date_expiration);
+
+            // 🔥 différence en jours
+            const diff = (dateExp - aujourdHui) / (1000 * 60 * 60 * 24);
+
+            // ⚠️ expire aujourd’hui ou demain
+            if (diff <= 1) {
+
+                html += `
+                    <li style="color:red;">
+                        ⚠️ <strong>${p.nom}</strong><br>
+                        expire le ${dateExp.toLocaleDateString()}
+                    </li>
+                `;
+            }
+        });
+
+        if (html === "") {
+            html = "<li>Aucune alerte</li>";
+        }
+
+        el.innerHTML = html;
+
+    } catch (err) {
+        console.error(err);
+        el.innerHTML = "<li>Erreur ❌</li>";
+    }
+}
+
 // 🚀 LANCEMENT
 loadProduits();
 loadChart();
+loadAlertes();
