@@ -113,6 +113,52 @@ async function loadChart() {
     }
 }
 
+async function loadVentes() {
+
+    const el = document.getElementById("ventes");
+    el.innerHTML = "<li>Chargement...</li>";
+
+    try {
+
+        const res = await fetch("/.netlify/functions/factures");
+
+        if (!res.ok) {
+            throw new Error("Erreur API");
+        }
+
+        const data = await res.json();
+
+        console.log("Ventes:", data);
+
+        if (!data || data.length === 0) {
+            el.innerHTML = "<li>Aucune vente</li>";
+            return;
+        }
+
+        let html = "";
+
+        data.forEach(f => {
+
+            const date = f.date_facture || "Date inconnue";
+            const montant = Number(f.total_ttc || 0).toLocaleString();
+
+            html += `
+                <li>
+                    📅 ${date}<br>
+                    💰 <strong>${montant} FCFA</strong>
+                </li>
+            `;
+        });
+
+        el.innerHTML = html;
+
+    } catch (err) {
+
+        console.error(err);
+        el.innerHTML = "<li>Erreur de chargement ❌</li>";
+    }
+}
+
 // 🚀 LANCEMENT
 loadProduits();
 loadChart();
