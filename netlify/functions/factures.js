@@ -1,19 +1,54 @@
-export async function handler() {
+/**
+ * Netlify Function : factures
+ * Récupère toutes les factures depuis Supabase
+ * Les clés API restent côté serveur (jamais exposées au frontend)
+ */
 
-    const url = process.env.SUPABASE_URL + "/rest/v1/factures";
+export async function handler(event) {
+
+    // Vérification des variables d'environnement
+    const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_KEY;
 
-    const res = await fetch(url, {
-        headers: {
-            apikey: key,
-            Authorization: "Bearer " + key
+    if (!url || !key) {
+        return {
+            statusCode: 500,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ error: "Configuration Supabase manquante" })
+        };
+    }
+
+    try {
+        // Trier par date décroissante côté serveur
+        const res = await fetch(url + "/rest/v1/factures?select=*&order=date_facture.desc", {
+            headers: {
+                apikey: key,
+                Authorization: "Bearer " + key,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!res.ok) {
+            throw new Error(`Supabase error ${res.status}: ${await res.text()}`);
         }
-    });
 
-    const data = await res.json();
+        const data = await res.json();
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify(data)
-    };
+        return {
+            statusCode: 200,
+            headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "no-cache"
+            },
+            body: JSON.stringify(data)
+        };
+
+    } catch (err) {
+        console.error("[factures]", err.message);
+        return {
+            statusCode: 500,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ error: err.message })
+        };
+    }
 }

@@ -1,89 +1,485 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard Poissonnerie</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AquaDash – Gestion Poissonnerie</title>
 
-    <!-- 📱 Responsive -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- 📊 Chart.js -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- 🎨 STYLE -->
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
     <style>
+        /* ═══════════════════════════════════════
+           VARIABLES & RESET
+        ═══════════════════════════════════════ */
+        :root {
+            --bg:         #0d1117;
+            --surface:    #161b22;
+            --surface2:   #1e2530;
+            --border:     rgba(255,255,255,0.07);
+            --accent:     #00c9a7;
+            --accent2:    #0070f3;
+            --warn:       #f5a623;
+            --danger:     #ff4d4d;
+            --ok:         #00c9a7;
+            --text:       #e6edf3;
+            --muted:      #8b949e;
+            --radius:     14px;
+            --shadow:     0 4px 32px rgba(0,0,0,0.4);
+            --font-head:  'Syne', sans-serif;
+            --font-body:  'DM Sans', sans-serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            margin: 0;
-            padding: 10px;
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
+        /* ── Background texture ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,201,167,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 110%, rgba(0,112,243,0.06) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
         }
 
-        .card {
-            background: white;
-            padding: 15px;
+        /* ═══════════════════════════════════════
+           LAYOUT
+        ═══════════════════════════════════════ */
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px 60px;
+        }
+
+        /* ── Header ── */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 36px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            animation: fadeDown 0.5s ease both;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 42px; height: 42px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
             border-radius: 12px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: grid;
+            place-items: center;
+            font-size: 22px;
         }
 
-        ul {
+        .logo h1 {
+            font-family: var(--font-head);
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span { color: var(--accent); }
+
+        .header-meta {
+            font-size: 0.78rem;
+            color: var(--muted);
+            text-align: right;
+            line-height: 1.6;
+        }
+
+        .live-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-right: 5px;
+            animation: pulse 2s ease infinite;
+        }
+
+        /* ── KPI Bar ── */
+        .kpi-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+            animation: fadeUp 0.5s 0.1s ease both;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 2px;
+        }
+        .kpi-card.green::after  { background: var(--accent); }
+        .kpi-card.blue::after   { background: var(--accent2); }
+        .kpi-card.orange::after { background: var(--warn); }
+        .kpi-card.red::after    { background: var(--danger); }
+
+        .kpi-label {
+            font-size: 0.72rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-family: var(--font-head);
+            font-size: 1.7rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .kpi-card.green  .kpi-value { color: var(--accent); }
+        .kpi-card.blue   .kpi-value { color: var(--accent2); }
+        .kpi-card.orange .kpi-value { color: var(--warn); }
+        .kpi-card.red    .kpi-value { color: var(--danger); }
+
+        .kpi-sub {
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* ── Grid ── */
+        .grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: 1fr 1fr;
+            grid-template-areas:
+                "chart  chart"
+                "produits ventes"
+                "alertes alertes";
+        }
+
+        @media (max-width: 720px) {
+            .grid {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "chart"
+                    "alertes"
+                    "produits"
+                    "ventes";
+            }
+        }
+
+        /* ── Card ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 22px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: var(--shadow);
+            animation: fadeUp 0.5s ease both;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.15s; }
+        .card:nth-child(2) { animation-delay: 0.25s; }
+        .card:nth-child(3) { animation-delay: 0.35s; }
+        .card:nth-child(4) { animation-delay: 0.45s; }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-family: var(--font-head);
+            font-size: 0.95rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .icon {
+            width: 30px; height: 30px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            font-size: 15px;
+            background: var(--surface2);
+        }
+
+        .badge {
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 20px;
+            background: var(--surface2);
+            color: var(--muted);
+        }
+
+        /* ── Chart area ── */
+        .area-chart { grid-area: chart; }
+        .area-produits { grid-area: produits; }
+        .area-ventes   { grid-area: ventes; }
+        .area-alertes  { grid-area: alertes; }
+
+        .chart-wrap {
+            position: relative;
+            height: 220px;
+        }
+
+        /* ── List ── */
+        .data-list {
             list-style: none;
-            padding: 0;
-            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
 
-        li {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
+        .data-list::-webkit-scrollbar { width: 4px; }
+        .data-list::-webkit-scrollbar-track { background: transparent; }
+        .data-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .data-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s;
+            animation: fadeIn 0.3s ease both;
         }
 
-        li:last-child {
-            border-bottom: none;
+        .data-item:hover { background: rgba(255,255,255,0.04); }
+
+        .item-left { display: flex; flex-direction: column; gap: 2px; }
+        .item-name { font-size: 0.88rem; font-weight: 500; }
+        .item-sub  { font-size: 0.73rem; color: var(--muted); }
+
+        .item-right {
+            font-family: var(--font-head);
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
         }
 
-        canvas {
-            width: 100% !important;
-            max-height: 300px;
+        /* ── Alertes ── */
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            animation: fadeIn 0.3s ease both;
         }
+
+        .alert-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .alert-dot.red    { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+        .alert-dot.orange { background: var(--warn);   box-shadow: 0 0 8px var(--warn); }
+        .alert-dot.yellow { background: #f0d000;        box-shadow: 0 0 8px #f0d000; }
+
+        .alert-name { font-size: 0.88rem; font-weight: 500; }
+        .alert-date { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
+
+        .alert-badge {
+            margin-left: auto;
+            font-size: 0.67rem;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+        .alert-badge.red    { background: rgba(255,77,77,0.15);  color: var(--danger); }
+        .alert-badge.orange { background: rgba(245,166,35,0.15); color: var(--warn); }
+        .alert-badge.yellow { background: rgba(240,208,0,0.15);  color: #f0d000; }
+
+        /* ── Empty / Loading ── */
+        .empty-state {
+            padding: 28px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 18px; height: 18px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        /* ── Refresh button ── */
+        .btn-refresh {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--muted);
+            font-size: 0.75rem;
+            font-family: var(--font-body);
+            padding: 5px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ═══════════════════════════════════════
+           ANIMATIONS
+        ═══════════════════════════════════════ */
+        @keyframes fadeDown  { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform: none; } }
+        @keyframes fadeUp    { from { opacity:0; transform: translateY(16px);  } to { opacity:1; transform: none; } }
+        @keyframes fadeIn    { from { opacity:0; }                               to { opacity:1; } }
+        @keyframes spin      { to { transform: rotate(360deg); } }
+        @keyframes pulse     { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
     </style>
 </head>
-
 <body>
+<div class="wrapper">
 
-    <h2>📊 Dashboard Poissonnerie</h2>
+    <!-- ── Header ── -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🐟</div>
+            <h1>Aqua<span>Dash</span></h1>
+        </div>
+        <div class="header-meta">
+            <span class="live-dot"></span>Synchronisé avec Supabase<br>
+            <span id="last-update">–</span>
+        </div>
+    </header>
 
-    <!-- 🐟 PRODUITS -->
-    <div class="card">
-        <h3>🐟 Produits</h3>
-        <ul id="produits"></ul>
+    <!-- ── KPI Bar ── -->
+    <div class="kpi-bar">
+        <div class="kpi-card green">
+            <div class="kpi-label">Ventes du jour</div>
+            <div class="kpi-value" id="kpi-jour">–</div>
+            <div class="kpi-sub">FCFA aujourd'hui</div>
+        </div>
+        <div class="kpi-card blue">
+            <div class="kpi-label">Total factures</div>
+            <div class="kpi-value" id="kpi-total">–</div>
+            <div class="kpi-sub">sur toutes les dates</div>
+        </div>
+        <div class="kpi-card orange">
+            <div class="kpi-label">Produits en stock</div>
+            <div class="kpi-value" id="kpi-produits">–</div>
+            <div class="kpi-sub">références actives</div>
+        </div>
+        <div class="kpi-card red">
+            <div class="kpi-label">Alertes expiration</div>
+            <div class="kpi-value" id="kpi-alertes">–</div>
+            <div class="kpi-sub">à traiter</div>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>⚠️ Alertes expiration</h3>
-        <ul id="alertes"></ul>
-    </div>
+    <!-- ── Main Grid ── -->
+    <div class="grid">
 
-    <div class="card">
-        <h3>💰 Ventes</h3>
-        <ul id="ventes"></ul>
-    </div>
+        <!-- Graphique -->
+        <div class="card area-chart">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="icon">📊</div> Ventes par jour
+                </div>
+                <button class="btn-refresh" onclick="loadChart()">↻ Actualiser</button>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="chartVentes"></canvas>
+            </div>
+        </div>
 
-    <!-- 📈 GRAPH -->
-    <div class="card">
-        <h3>📈 Ventes</h3>
-        <canvas id="chartVentes"></canvas>
-    </div>
+        <!-- Produits -->
+        <div class="card area-produits">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="icon">🐟</div> Produits
+                </div>
+                <span class="badge" id="badge-produits">…</span>
+            </div>
+            <ul class="data-list" id="produits">
+                <li class="empty-state"><span class="spinner"></span>Chargement…</li>
+            </ul>
+        </div>
 
-    <!-- 🔥 SCRIPT -->
-    <script src="js/app.js"></script>
+        <!-- Ventes -->
+        <div class="card area-ventes">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="icon">💰</div> Historique ventes
+                </div>
+                <span class="badge" id="badge-ventes">…</span>
+            </div>
+            <ul class="data-list" id="ventes">
+                <li class="empty-state"><span class="spinner"></span>Chargement…</li>
+            </ul>
+        </div>
 
+        <!-- Alertes -->
+        <div class="card area-alertes">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="icon">⚠️</div> Alertes expiration
+                </div>
+                <span class="badge" id="badge-alertes">…</span>
+            </div>
+            <div id="alertes" style="display:flex;flex-direction:column;gap:8px;">
+                <div class="empty-state"><span class="spinner"></span>Chargement…</div>
+            </div>
+        </div>
+
+    </div><!-- /grid -->
+</div><!-- /wrapper -->
+
+<script src="js/app.js"></script>
 </body>
-
 </html>

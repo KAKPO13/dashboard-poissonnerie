@@ -1,218 +1,381 @@
-let chartInstance = null;
+/**
+ * AquaDash – Dashboard Poissonnerie
+ * Gestion : produits, ventes, graphique, alertes expiration
+ * Appels API via Netlify Functions (aucune clé Supabase en frontend)
+ */
 
-// 🐟 PRODUITS
-async function loadProduits() {
+"use strict";
 
-    const el = document.getElementById("produits");
-    el.innerHTML = "<li>Chargement...</li>";
+// ═══════════════════════════════════════
+// ÉTAT GLOBAL
+// ═══════════════════════════════════════
 
-    try {
+let chartInstance = null; // Instance Chart.js (singleton)
 
-        const res = await fetch("/.netlify/functions/produits");
+const TODAY = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+})();
 
-        if (!res.ok) {
-            throw new Error("Erreur serveur : " + res.status);
-        }
+// ═══════════════════════════════════════
+// UTILITAIRES
+// ═══════════════════════════════════════
 
-        const data = await res.json();
+/**
+ * Formate un nombre en monnaie FCFA lisible
+ * Ex : 11800 → "11 800 FCFA"
+ */
+function formatFCFA(amount) {
+    return Number(amount).toLocaleString("fr-FR") + " FCFA";
+}
 
-        console.log("Produits:", data);
+/**
+ * Formate une date ISO en date locale FR
+ * Ex : "2025-07-10" → "10/07/2025"
+ */
+function formatDate(isoString) {
+    if (!isoString) return "Date inconnue";
+    const d = new Date(isoString);
+    return d.toLocaleDateString("fr-FR");
+}
 
-        if (!data || data.length === 0) {
-            el.innerHTML = "<li>Aucun produit disponible</li>";
-            return;
-        }
+/**
+ * Retourne la date du jour en format ISO "YYYY-MM-DD"
+ */
+function getTodayISO() {
+    return TODAY.toISOString().split("T")[0];
+}
 
-        let html = "";
+/**
+ * Calcule la différence en jours entre une date et aujourd'hui
+ * (comparaison date uniquement, sans heure)
+ */
+function diffDays(isoDate) {
+    const d = new Date(isoDate);
+    d.setHours(0, 0, 0, 0);
+    return (d - TODAY) / (1000 * 60 * 60 * 24);
+}
 
-        data.forEach(p => {
-
-            const nom = p.nom || "Sans nom";
-            const quantite = p.quantite ?? 0;
-
-            html += `
-                <li>
-                    🐟 <strong>${nom}</strong><br>
-                    Stock : ${quantite} kg
-                </li>
-            `;
+/**
+ * Met à jour le timestamp "Dernière mise à jour" dans le header
+ */
+function updateTimestamp() {
+    const el = document.getElementById("last-update");
+    if (el) {
+        el.textContent = "Mis à jour à " + new Date().toLocaleTimeString("fr-FR", {
+            hour: "2-digit", minute: "2-digit"
         });
-
-        el.innerHTML = html;
-
-    } catch (err) {
-
-        console.error(err);
-        el.innerHTML = "<li>Erreur de chargement ❌</li>";
     }
 }
 
-// 📊 GRAPH VENTES
-async function loadChart() {
+/**
+ * Affiche un état chargement dans un élément
+ */
+function setLoading(el) {
+    el.innerHTML = `<li class="empty-state"><span class="spinner"></span>Chargement…</li>`;
+}
+
+/**
+ * Affiche un message d'erreur dans une liste
+ */
+function setError(el, msg = "Erreur de chargement") {
+    el.innerHTML = `<li class="empty-state" style="color:#ff4d4d;">❌ ${msg}</li>`;
+}
+
+// ═══════════════════════════════════════
+// API CALLS
+// ═══════════════════════════════════════
+
+/**
+ * Appelle une Netlify Function et retourne le JSON
+ * Lance une erreur si la réponse HTTP n'est pas ok
+ */
+async function apiFetch(endpoint) {
+    const res = await fetch(`/.netlify/functions/${endpoint}`);
+    if (!res.ok) throw new Error(`Erreur ${res.status} sur /${endpoint}`);
+    return res.json();
+}
+
+// ═══════════════════════════════════════
+// 🐟 PRODUITS
+// ═══════════════════════════════════════
+
+async function loadProduits() {
+    const el = document.getElementById("produits");
+    setLoading(el);
 
     try {
+        const data = await apiFetch("produits");
 
-        const res = await fetch("/.netlify/functions/factures");
+        // Mise à jour KPI
+        document.getElementById("kpi-produits").textContent = data.length;
+        document.getElementById("badge-produits").textContent = data.length + " article(s)";
 
-        if (!res.ok) {
-            throw new Error("Erreur API factures");
+        if (!data.length) {
+            el.innerHTML = `<li class="empty-state">Aucun produit disponible</li>`;
+            return;
         }
 
-        const data = await res.json();
+        // Trier par nom alphabétique
+        const sorted = [...data].sort((a, b) =>
+            (a.nom || "").localeCompare(b.nom || "", "fr")
+        );
 
-        console.log("Factures:", data);
+        el.innerHTML = sorted.map((p, i) => {
+            const nom      = p.nom || "Sans nom";
+            const quantite = p.quantite ?? 0;
+            const exp      = p.date_expiration ? diffDays(p.date_expiration) : null;
 
-        if (!data || data.length === 0) return;
+            // Indicateur visuel stock bas (< 5 kg)
+            const stockBas = quantite < 5
+                ? `<span style="color:#f5a623;font-size:0.7rem;"> ⚠ stock bas</span>`
+                : "";
 
-        // 🔥 Regrouper ventes par date
-        const ventesParJour = {};
+            return `
+                <li class="data-item" style="animation-delay:${i * 40}ms">
+                    <div class="item-left">
+                        <span class="item-name">${nom}${stockBas}</span>
+                        <span class="item-sub">Stock disponible</span>
+                    </div>
+                    <span class="item-right">${quantite} kg</span>
+                </li>`;
+        }).join("");
 
-        data.forEach(f => {
+    } catch (err) {
+        console.error("[Produits]", err);
+        setError(el);
+        document.getElementById("kpi-produits").textContent = "–";
+    }
+}
 
-            const date = f.date_facture;
+// ═══════════════════════════════════════
+// 💰 VENTES (historique)
+// ═══════════════════════════════════════
 
-            if (!ventesParJour[date]) {
-                ventesParJour[date] = 0;
-            }
+async function loadVentes() {
+    const el = document.getElementById("ventes");
+    setLoading(el);
 
-            ventesParJour[date] += Number(f.total_ttc || 0);
+    try {
+        const data = await apiFetch("factures");
+
+        // Calculs KPI
+        const totalAll = data.reduce((s, f) => s + Number(f.total_ttc || 0), 0);
+        const todayISO = getTodayISO();
+        const totalJour = data
+            .filter(f => f.date_facture === todayISO)
+            .reduce((s, f) => s + Number(f.total_ttc || 0), 0);
+
+        document.getElementById("kpi-total").textContent = totalAll.toLocaleString("fr-FR");
+        document.getElementById("kpi-jour").textContent  = totalJour.toLocaleString("fr-FR");
+        document.getElementById("badge-ventes").textContent = data.length + " facture(s)";
+
+        if (!data.length) {
+            el.innerHTML = `<li class="empty-state">Aucune vente enregistrée</li>`;
+            return;
+        }
+
+        // Trier par date décroissante
+        const sorted = [...data].sort((a, b) => {
+            const da = new Date(a.date_facture || 0);
+            const db = new Date(b.date_facture || 0);
+            return db - da;
         });
 
-        // 🔥 Trier les dates
-        const labels = Object.keys(ventesParJour).sort();
+        el.innerHTML = sorted.map((f, i) => {
+            const date   = formatDate(f.date_facture);
+            const client = f.client_nom || f.nom_client || "Client inconnu";
+            const montant = formatFCFA(f.total_ttc || 0);
+
+            return `
+                <li class="data-item" style="animation-delay:${i * 40}ms">
+                    <div class="item-left">
+                        <span class="item-name">${client}</span>
+                        <span class="item-sub">📅 ${date}</span>
+                    </div>
+                    <span class="item-right">${montant}</span>
+                </li>`;
+        }).join("");
+
+    } catch (err) {
+        console.error("[Ventes]", err);
+        setError(el);
+    }
+}
+
+// ═══════════════════════════════════════
+// 📊 GRAPHIQUE VENTES
+// ═══════════════════════════════════════
+
+async function loadChart() {
+    try {
+        const data = await apiFetch("factures");
+        if (!data.length) return;
+
+        // Regrouper ventes par jour
+        const ventesParJour = {};
+        data.forEach(f => {
+            const date = f.date_facture;
+            if (!date) return;
+            ventesParJour[date] = (ventesParJour[date] || 0) + Number(f.total_ttc || 0);
+        });
+
+        // Trier les dates croissant
+        const labels  = Object.keys(ventesParJour).sort();
         const valeurs = labels.map(d => ventesParJour[d]);
+
+        // Labels affichés en format FR
+        const labelsAffich = labels.map(d => formatDate(d));
 
         const ctx = document.getElementById("chartVentes");
 
-        // 🔥 éviter doublon graphique
+        // Détruire l'instance précédente si elle existe
         if (chartInstance) {
             chartInstance.destroy();
+            chartInstance = null;
         }
+
+        // Couleurs dégradées pour les barres
+        const gradient = ctx.getContext("2d").createLinearGradient(0, 0, 0, 220);
+        gradient.addColorStop(0, "rgba(0, 201, 167, 0.85)");
+        gradient.addColorStop(1, "rgba(0, 112, 243, 0.4)");
 
         chartInstance = new Chart(ctx, {
             type: "bar",
             data: {
-                labels: labels,
+                labels: labelsAffich,
                 datasets: [{
                     label: "Ventes (FCFA)",
-                    data: valeurs
+                    data: valeurs,
+                    backgroundColor: gradient,
+                    borderColor: "rgba(0, 201, 167, 0.9)",
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false,
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 600, easing: "easeOutQuart" },
                 plugins: {
-                    legend: {
-                        display: true
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: "#1e2530",
+                        titleColor: "#8b949e",
+                        bodyColor: "#e6edf3",
+                        borderColor: "rgba(255,255,255,0.07)",
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label: ctx => " " + formatFCFA(ctx.parsed.y)
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: "#8b949e", font: { size: 11 } },
+                        grid: { color: "rgba(255,255,255,0.04)" }
+                    },
+                    y: {
+                        ticks: {
+                            color: "#8b949e",
+                            font: { size: 11 },
+                            callback: v => (v / 1000).toFixed(0) + "k"
+                        },
+                        grid: { color: "rgba(255,255,255,0.06)" }
                     }
                 }
             }
         });
 
     } catch (err) {
-        console.error("Erreur graphique:", err);
+        console.error("[Graphique]", err);
     }
 }
 
-async function loadVentes() {
-
-    const el = document.getElementById("ventes");
-    el.innerHTML = "<li>Chargement...</li>";
-
-    try {
-
-        const res = await fetch("/.netlify/functions/factures");
-
-        if (!res.ok) {
-            throw new Error("Erreur API");
-        }
-
-        const data = await res.json();
-
-        console.log("DEBUG VENTES:", data); // 🔥 IMPORTANT
-
-        if (!data || data.length === 0) {
-            el.innerHTML = "<li>Aucune vente</li>";
-            return;
-        }
-
-        let html = "";
-
-        data.forEach(f => {
-
-            const date = f.date_facture || "Date inconnue";
-
-            // 🔥 on utilise EXACTEMENT le même champ que le graphique
-            const montant = Number(f.total_ttc || 0).toLocaleString();
-
-            html += `
-                <li>
-                    📅 ${date}<br>
-                    💰 <strong>${montant} FCFA</strong>
-                </li>
-            `;
-        });
-
-        el.innerHTML = html;
-
-    } catch (err) {
-
-        console.error(err);
-        el.innerHTML = "<li>Erreur de chargement ❌</li>";
-    }
-}
+// ═══════════════════════════════════════
+// ⚠️ ALERTES EXPIRATION
+// ═══════════════════════════════════════
 
 async function loadAlertes() {
-
     const el = document.getElementById("alertes");
-    el.innerHTML = "<li>Chargement...</li>";
+    el.innerHTML = `<div class="empty-state"><span class="spinner"></span>Chargement…</div>`;
 
     try {
+        const data = await apiFetch("produits");
 
-        const res = await fetch("/.netlify/functions/produits");
-        const data = await res.json();
-
-        let html = "";
-
-        // 🔥 aujourd’hui sans heure
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        // Classifier les produits selon leur expiration
+        const alertes = [];
 
         data.forEach(p => {
-
             if (!p.date_expiration) return;
+            const diff = diffDays(p.date_expiration);
 
-            const dateExp = new Date(p.date_expiration);
-            dateExp.setHours(0, 0, 0, 0);
-
-            const diffDays = (dateExp - today) / (1000 * 60 * 60 * 24);
-
-            console.log(p.nom, diffDays); // 🔥 DEBUG
-
-            // 🔥 aujourd’hui OU demain
-            if (diffDays <= 1) {
-
-                html += `
-                    <li style="color:red;">
-                        ⚠️ <strong>${p.nom}</strong><br>
-                        expire le ${dateExp.toLocaleDateString()}
-                    </li>
-                `;
+            if (diff < 0) {
+                // Déjà expiré
+                alertes.push({ ...p, diff, type: "red", label: "Expiré" });
+            } else if (diff < 1) {
+                // Expire aujourd'hui
+                alertes.push({ ...p, diff, type: "orange", label: "Aujourd'hui" });
+            } else if (diff < 2) {
+                // Expire demain
+                alertes.push({ ...p, diff, type: "yellow", label: "Demain" });
             }
         });
 
-        if (html === "") {
-            html = "<li>Aucune alerte</li>";
+        // Mise à jour KPI alertes
+        document.getElementById("kpi-alertes").textContent = alertes.length;
+        document.getElementById("badge-alertes").textContent = alertes.length + " alerte(s)";
+
+        if (!alertes.length) {
+            el.innerHTML = `
+                <div class="empty-state" style="color:#00c9a7;">
+                    ✅ Aucune alerte d'expiration
+                </div>`;
+            return;
         }
 
-        el.innerHTML = html;
+        // Trier : expirés d'abord, puis aujourd'hui, demain
+        const ordre = { red: 0, orange: 1, yellow: 2 };
+        alertes.sort((a, b) => ordre[a.type] - ordre[b.type]);
+
+        el.innerHTML = alertes.map((p, i) => `
+            <div class="alert-item" style="animation-delay:${i * 50}ms">
+                <div class="alert-dot ${p.type}"></div>
+                <div>
+                    <div class="alert-name">${p.nom || "Produit inconnu"}</div>
+                    <div class="alert-date">Expiration : ${formatDate(p.date_expiration)}</div>
+                </div>
+                <span class="alert-badge ${p.type}">${p.label}</span>
+            </div>`
+        ).join("");
 
     } catch (err) {
-        console.error(err);
-        el.innerHTML = "<li>Erreur ❌</li>";
+        console.error("[Alertes]", err);
+        el.innerHTML = `<div class="empty-state" style="color:#ff4d4d;">❌ Erreur de chargement</div>`;
+        document.getElementById("kpi-alertes").textContent = "–";
     }
 }
 
-// 🚀 LANCEMENT
-loadProduits();
-loadChart();
-loadAlertes();
+// ═══════════════════════════════════════
+// 🚀 INITIALISATION
+// ═══════════════════════════════════════
+
+async function init() {
+    updateTimestamp();
+
+    // Lancer toutes les sections en parallèle
+    await Promise.allSettled([
+        loadProduits(),
+        loadVentes(),
+        loadChart(),
+        loadAlertes(),
+    ]);
+
+    updateTimestamp();
+}
+
+// Démarrage au chargement de la page
+document.addEventListener("DOMContentLoaded", init);
