@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AquaDash – Administration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:       #0d1117;
+            --surface:  #161b22;
+            --surface2: #1e2530;
+            --border:   rgba(255,255,255,0.08);
+            --accent:   #00c9a7;
+            --accent2:  #0070f3;
+            --warn:     #f5a623;
+            --danger:   #ff4d4d;
+            --text:     #e6edf3;
+            --muted:    #8b949e;
+            --radius:   14px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse 60% 40% at 10% 0%, rgba(0,201,167,0.07) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(0,112,243,0.05) 0%, transparent 55%);
+            pointer-events: none; z-index: 0;
+        }
+
+        .wrapper { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 28px 20px 60px; }
+
+        /* ── Header ── */
+        header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 32px; padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            animation: fadeDown 0.4s ease both;
+        }
+
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 11px; display: grid; place-items: center; font-size: 20px;
+        }
+        .logo h1 { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; }
+        .logo h1 span { color: var(--accent); }
+        .logo .badge-admin {
+            font-size: 0.65rem; font-weight: 700; padding: 3px 8px;
+            border-radius: 20px; background: rgba(245,166,35,0.15); color: var(--warn);
+            border: 1px solid rgba(245,166,35,0.25);
+        }
+
+        .header-right { display: flex; align-items: center; gap: 12px; }
+
+        .user-info { text-align: right; font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+        .user-info strong { color: var(--text); display: block; }
+
+        .btn-sm {
+            background: var(--surface2); border: 1px solid var(--border); border-radius: 9px;
+            color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+            padding: 8px 14px; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-sm:hover { border-color: var(--danger); color: var(--danger); }
+
+        /* ── Tabs ── */
+        .tabs {
+            display: flex; gap: 4px; margin-bottom: 24px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 11px; padding: 4px;
+            animation: fadeUp 0.4s 0.1s ease both;
+        }
+
+        .tab {
+            flex: 1; padding: 9px 16px; border: none; border-radius: 8px;
+            background: transparent; color: var(--muted);
+            font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 7px;
+        }
+        .tab.active { background: var(--surface2); color: var(--text); }
+
+        /* ── Card ── */
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.3);
+            animation: fadeUp 0.4s 0.2s ease both;
+        }
+
+        .card-title {
+            font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+            margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+        }
+
+        /* ── Formulaire création ── */
+        .form-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .field.full { grid-column: 1 / -1; }
+
+        label { font-size: 0.75rem; font-weight: 500; color: var(--muted); letter-spacing: 0.03em; }
+
+        input, select {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 9px; color: var(--text);
+            font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+            padding: 10px 13px; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0,201,167,0.1);
+        }
+        select option { background: var(--surface2); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #00a88b);
+            border: none; border-radius: 9px;
+            color: #0d1117; font-family: 'Syne', sans-serif;
+            font-size: 0.88rem; font-weight: 700;
+            padding: 11px 22px; cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s;
+            display: inline-flex; align-items: center; gap: 7px;
+        }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        /* ── Table utilisateurs ── */
+        .table-wrap { overflow-x: auto; margin-top: 8px; }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        thead tr { border-bottom: 1px solid var(--border); }
+
+        th {
+            text-align: left; font-size: 0.72rem; font-weight: 600;
+            color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 8px 12px 12px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background 0.15s;
+        }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        tbody tr:last-child { border-bottom: none; }
+
+        td { padding: 12px; font-size: 0.85rem; vertical-align: middle; }
+
+        .td-email { color: var(--muted); font-size: 0.8rem; }
+
+        /* ── Badges rôles ── */
+        .role-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 0.7rem; font-weight: 700;
+            padding: 4px 10px; border-radius: 20px;
+        }
+        .role-admin   { background: rgba(245,166,35,0.15); color: var(--warn);   border: 1px solid rgba(245,166,35,0.25); }
+        .role-gerant  { background: rgba(0,112,243,0.15);  color: #4da3ff;       border: 1px solid rgba(0,112,243,0.25); }
+        .role-employe { background: rgba(0,201,167,0.12);  color: var(--accent); border: 1px solid rgba(0,201,167,0.2); }
+
+        /* ── Actions ── */
+        .actions { display: flex; gap: 6px; align-items: center; }
+
+        .btn-role {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 7px; color: var(--muted);
+            font-family: 'DM Sans', sans-serif; font-size: 0.75rem;
+            padding: 5px 10px; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-role:hover { border-color: var(--accent2); color: #4da3ff; }
+
+        .btn-delete {
+            background: none; border: 1px solid rgba(255,77,77,0.2);
+            border-radius: 7px; color: rgba(255,77,77,0.6);
+            font-size: 0.8rem; width: 28px; height: 28px;
+            display: grid; place-items: center; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-delete:hover { background: rgba(255,77,77,0.1); color: var(--danger); border-color: var(--danger); }
+
+        /* ── Statut actif ── */
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px;
+        }
+        .status-dot.active   { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+        .status-dot.inactive { background: var(--muted); }
+
+        /* ── Messages ── */
+        .msg {
+            display: none; margin-top: 14px; padding: 11px 14px;
+            border-radius: 9px; font-size: 0.82rem; font-weight: 500;
+            align-items: center; gap: 8px;
+        }
+        .msg.error   { display: flex; background: rgba(255,77,77,0.1);  color: var(--danger); border: 1px solid rgba(255,77,77,0.2); }
+        .msg.success { display: flex; background: rgba(0,201,167,0.1); color: var(--accent);  border: 1px solid rgba(0,201,167,0.2); }
+
+        .spinner-sm {
+            width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.15);
+            border-top-color: currentColor; border-radius: 50%;
+            animation: spin 0.6s linear infinite; display: inline-block;
+        }
+
+        .empty-row td { text-align: center; color: var(--muted); padding: 32px; font-size: 0.85rem; }
+
+        /* ── Droits résumé ── */
+        .droits-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+        .droits-table th, .droits-table td { padding: 10px 14px; text-align: left; font-size: 0.83rem; }
+        .droits-table thead th { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+        .droits-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .droits-table tbody tr:last-child { border: none; }
+        .check-yes { color: var(--accent); }
+        .check-no  { color: rgba(255,255,255,0.15); }
+
+        /* ── Sections ── */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        @keyframes fadeDown { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: none; } }
+        @keyframes fadeUp   { from { opacity:0; transform: translateY(14px);  } to { opacity:1; transform: none; } }
+        @keyframes spin     { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+
+    <!-- ── Header ── -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🐟</div>
+            <div>
+                <h1>Aqua<span>Dash</span></h1>
+            </div>
+            <span class="badge-admin">ADMIN</span>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <strong id="header-nom">–</strong>
+                Administrateur
+            </div>
+            <button class="btn-sm" onclick="logout()">Déconnexion</button>
+            <a href="index.html"><button class="btn-sm" style="border-color:rgba(0,201,167,0.3);color:var(--accent);">→ Dashboard</button></a>
+        </div>
+    </header>
+
+    <!-- ── Tabs ── -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('utilisateurs', this)">👥 Utilisateurs</button>
+        <button class="tab" onclick="switchTab('creer', this)">➕ Créer un compte</button>
+        <button class="tab" onclick="switchTab('droits', this)">🔑 Droits d'accès</button>
+    </div>
+
+    <!-- ════════════ TAB : UTILISATEURS ════════════ -->
+    <div class="section active" id="tab-utilisateurs">
+        <div class="card">
+            <div class="card-title">👥 Gestion des utilisateurs <span id="count-users" style="font-size:0.75rem;color:var(--muted);font-weight:400;"></span></div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>E-mail</th>
+                            <th>Rôle</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table">
+                        <tr class="empty-row"><td colspan="5"><span class="spinner-sm"></span> Chargement…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════ TAB : CRÉER ════════════ -->
+    <div class="section" id="tab-creer">
+        <div class="card">
+            <div class="card-title">➕ Créer un nouveau compte</div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label>Prénom et nom</label>
+                    <input type="text" id="new-nom" placeholder="Ex : Kouassi Amani"/>
+                </div>
+                <div class="field">
+                    <label>Adresse e-mail</label>
+                    <input type="email" id="new-email" placeholder="employe@poissonnerie.ci"/>
+                </div>
+                <div class="field">
+                    <label>Mot de passe temporaire</label>
+                    <input type="password" id="new-password" placeholder="Min. 8 caractères"/>
+                </div>
+                <div class="field">
+                    <label>Rôle attribué</label>
+                    <select id="new-role">
+                        <option value="employe">👷 Employé – lecture seule</option>
+                        <option value="gerant">📋 Gérant – accès complet</option>
+                        <option value="admin">🔑 Administrateur – gestion totale</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="btn-creer" onclick="creerUtilisateur()">
+                ➕ Créer le compte
+            </button>
+
+            <div class="msg" id="msg-creer"></div>
+        </div>
+    </div>
+
+    <!-- ════════════ TAB : DROITS ════════════ -->
+    <div class="section" id="tab-droits">
+        <div class="card">
+            <div class="card-title">🔑 Matrice des droits d'accès</div>
+            <div class="table-wrap">
+                <table class="droits-table">
+                    <thead>
+                        <tr>
+                            <th>Fonctionnalité</th>
+                            <th><span class="role-badge role-employe">👷 Employé</span></th>
+                            <th><span class="role-badge role-gerant">📋 Gérant</span></th>
+                            <th><span class="role-badge role-admin">🔑 Admin</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>🐟 Voir les produits</td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td></tr>
+                        <tr><td>⚠️ Voir les alertes expiration</td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td></tr>
+                        <tr><td>💰 Voir l'historique des ventes</td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td></tr>
+                        <tr><td>📊 Voir le graphique ventes</td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td></tr>
+                        <tr><td>💳 Voir les KPIs financiers</td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td></tr>
+                        <tr><td>👥 Voir les utilisateurs</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td></tr>
+                        <tr><td>➕ Créer des comptes</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td></tr>
+                        <tr><td>🔄 Modifier les rôles</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td></tr>
+                        <tr><td>🗑️ Désactiver des comptes</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /wrapper -->
+
+<script>
+    // ══════════════════════════════════════
+    // VÉRIFICATION SESSION ADMIN
+    // ══════════════════════════════════════
+
+    const SESSION_KEY = "aqua_session";
+
+    function getSession() {
+        try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); }
+        catch { return null; }
+    }
+
+    (function guardAdmin() {
+        const s = getSession();
+        if (!s || !s.token) {
+            window.location.href = "login.html";
+            return;
+        }
+        if (s.role !== "admin") {
+            // Non admin → rediriger vers dashboard
+            window.location.href = "index.html";
+            return;
+        }
+        document.getElementById("header-nom").textContent = s.nom || s.email;
+    })();
+
+    function logout() {
+        sessionStorage.removeItem(SESSION_KEY);
+        window.location.href = "login.html";
+    }
+
+    // ══════════════════════════════════════
+    // ONGLETS
+    // ══════════════════════════════════════
+
+    function switchTab(name, btn) {
+        document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.getElementById("tab-" + name).classList.add("active");
+        btn.classList.add("active");
+    }
+
+    // ══════════════════════════════════════
+    // CHARGER UTILISATEURS
+    // ══════════════════════════════════════
+
+    async function loadUsers() {
+        const tbody = document.getElementById("users-table");
+        try {
+            const s = getSession();
+            const res = await fetch("/.netlify/functions/admin-users", {
+                headers: { Authorization: "Bearer " + s.token }
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            document.getElementById("count-users").textContent = `(${data.length} compte(s))`;
+
+            if (!data.length) {
+                tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Aucun utilisateur trouvé</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(u => `
+                <tr>
+                    <td><strong>${escHtml(u.nom || "–")}</strong></td>
+                    <td class="td-email">${escHtml(u.email)}</td>
+                    <td><span class="role-badge role-${u.role}">${roleLabel(u.role)}</span></td>
+                    <td>
+                        <span class="status-dot ${u.actif ? 'active' : 'inactive'}"></span>
+                        ${u.actif ? "Actif" : "Inactif"}
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <select class="btn-role" onchange="changeRole('${u.id}', this.value)">
+                                <option value="">Changer rôle…</option>
+                                <option value="employe">👷 Employé</option>
+                                <option value="gerant">📋 Gérant</option>
+                                <option value="admin">🔑 Admin</option>
+                            </select>
+                            <button class="btn-delete" title="Désactiver" onclick="toggleUser('${u.id}', ${u.actif})">
+                                ${u.actif ? "🚫" : "✅"}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join("");
+
+        } catch (err) {
+            tbody.innerHTML = `<tr class="empty-row"><td colspan="5" style="color:#ff4d4d;">❌ ${err.message}</td></tr>`;
+        }
+    }
+
+    function roleLabel(role) {
+        return { admin: "🔑 Admin", gerant: "📋 Gérant", employe: "👷 Employé" }[role] || role;
+    }
+
+    function escHtml(str) {
+        return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    // ══════════════════════════════════════
+    // CHANGER RÔLE
+    // ══════════════════════════════════════
+
+    async function changeRole(userId, role) {
+        if (!role) return;
+        try {
+            const s = getSession();
+            const res = await fetch("/.netlify/functions/admin-users", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", Authorization: "Bearer " + s.token },
+                body: JSON.stringify({ userId, role })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            await loadUsers();
+        } catch (err) {
+            alert("Erreur : " + err.message);
+        }
+    }
+
+    // ══════════════════════════════════════
+    // ACTIVER / DÉSACTIVER UN UTILISATEUR
+    // ══════════════════════════════════════
+
+    async function toggleUser(userId, estActif) {
+        const action = estActif ? "désactiver" : "réactiver";
+        if (!confirm(`Voulez-vous vraiment ${action} cet utilisateur ?`)) return;
+        try {
+            const s = getSession();
+            const res = await fetch("/.netlify/functions/admin-users", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", Authorization: "Bearer " + s.token },
+                body: JSON.stringify({ userId, actif: !estActif })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            await loadUsers();
+        } catch (err) {
+            alert("Erreur : " + err.message);
+        }
+    }
+
+    // ══════════════════════════════════════
+    // CRÉER UN UTILISATEUR
+    // ══════════════════════════════════════
+
+    async function creerUtilisateur() {
+        const nom      = document.getElementById("new-nom").value.trim();
+        const email    = document.getElementById("new-email").value.trim();
+        const password = document.getElementById("new-password").value;
+        const role     = document.getElementById("new-role").value;
+        const btn      = document.getElementById("btn-creer");
+        const msg      = document.getElementById("msg-creer");
+
+        msg.className = "msg";
+
+        if (!nom || !email || !password) {
+            showMsg2("error", "Tous les champs sont obligatoires.");
+            return;
+        }
+        if (password.length < 8) {
+            showMsg2("error", "Le mot de passe doit contenir au moins 8 caractères.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-sm"></span> Création en cours…`;
+
+        try {
+            const s = getSession();
+            const res = await fetch("/.netlify/functions/admin-users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: "Bearer " + s.token },
+                body: JSON.stringify({ nom, email, password, role })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            showMsg2("success", `✅ Compte créé pour ${nom} avec le rôle « ${role} ».`);
+
+            // Réinitialiser le formulaire
+            ["new-nom","new-email","new-password"].forEach(id => document.getElementById(id).value = "");
+            document.getElementById("new-role").value = "employe";
+
+        } catch (err) {
+            showMsg2("error", "❌ " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `➕ Créer le compte`;
+        }
+    }
+
+    function showMsg2(type, text) {
+        const m = document.getElementById("msg-creer");
+        m.className = "msg " + type;
+        m.textContent = text;
+    }
+
+    // ══════════════════════════════════════
+    // INIT
+    // ══════════════════════════════════════
+    loadUsers();
+</script>
+</body>
+</html>

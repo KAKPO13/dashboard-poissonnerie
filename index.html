@@ -3,412 +3,167 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>AquaDash – Gestion Poissonnerie</title>
-
-    <!-- Chart.js -->
+    <title>AquaDash – Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-
     <style>
-        /* ═══════════════════════════════════════
-           VARIABLES & RESET
-        ═══════════════════════════════════════ */
         :root {
-            --bg:         #0d1117;
-            --surface:    #161b22;
-            --surface2:   #1e2530;
-            --border:     rgba(255,255,255,0.07);
-            --accent:     #00c9a7;
-            --accent2:    #0070f3;
-            --warn:       #f5a623;
-            --danger:     #ff4d4d;
-            --ok:         #00c9a7;
-            --text:       #e6edf3;
-            --muted:      #8b949e;
-            --radius:     14px;
-            --shadow:     0 4px 32px rgba(0,0,0,0.4);
-            --font-head:  'Syne', sans-serif;
-            --font-body:  'DM Sans', sans-serif;
+            --bg:       #0d1117;
+            --surface:  #161b22;
+            --surface2: #1e2530;
+            --border:   rgba(255,255,255,0.07);
+            --accent:   #00c9a7;
+            --accent2:  #0070f3;
+            --warn:     #f5a623;
+            --danger:   #ff4d4d;
+            --text:     #e6edf3;
+            --muted:    #8b949e;
+            --radius:   14px;
+            --shadow:   0 4px 32px rgba(0,0,0,0.4);
         }
-
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: var(--font-body);
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* ── Background texture ── */
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
         body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,201,167,0.08) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 40% at 80% 110%, rgba(0,112,243,0.06) 0%, transparent 60%);
-            pointer-events: none;
-            z-index: 0;
+            content: ''; position: fixed; inset: 0;
+            background: radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,201,167,0.08) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 110%, rgba(0,112,243,0.06) 0%, transparent 60%);
+            pointer-events: none; z-index: 0;
         }
+        .wrapper { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
 
-        /* ═══════════════════════════════════════
-           LAYOUT
-        ═══════════════════════════════════════ */
-        .wrapper {
-            position: relative;
-            z-index: 1;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 24px 20px 60px;
-        }
+        header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid var(--border); animation: fadeDown 0.5s ease both; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 12px; display: grid; place-items: center; font-size: 22px; }
+        .logo h1 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; }
+        .logo h1 span { color: var(--accent); }
 
-        /* ── Header ── */
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 36px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            animation: fadeDown 0.5s ease both;
-        }
+        .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+        .user-pill { display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--border); border-radius: 30px; padding: 5px 14px 5px 7px; }
+        .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #0d1117; }
+        .user-name { font-size: 0.82rem; font-weight: 500; }
+        .role-pill { font-size: 0.65rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+        .role-pill.admin   { background: rgba(245,166,35,0.15); color: var(--warn);   border: 1px solid rgba(245,166,35,0.25); }
+        .role-pill.gerant  { background: rgba(0,112,243,0.15);  color: #4da3ff;       border: 1px solid rgba(0,112,243,0.25); }
+        .role-pill.employe { background: rgba(0,201,167,0.12);  color: var(--accent); border: 1px solid rgba(0,201,167,0.2); }
+        .btn-header { background: none; border: 1px solid var(--border); border-radius: 9px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.78rem; padding: 7px 13px; cursor: pointer; transition: all 0.2s; }
+        .btn-header:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-header.admin { border-color: rgba(245,166,35,0.3); color: var(--warn); }
+        .btn-header.admin:hover { background: rgba(245,166,35,0.08); }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .access-banner { background: rgba(0,112,243,0.08); border: 1px solid rgba(0,112,243,0.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.82rem; color: #4da3ff; display: none; align-items: center; gap: 10px; }
+        .access-banner.visible { display: flex; }
 
-        .logo-icon {
-            width: 42px; height: 42px;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            border-radius: 12px;
-            display: grid;
-            place-items: center;
-            font-size: 22px;
-        }
-
-        .logo h1 {
-            font-family: var(--font-head);
-            font-size: 1.4rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
-
-        .logo span { color: var(--accent); }
-
-        .header-meta {
-            font-size: 0.78rem;
-            color: var(--muted);
-            text-align: right;
-            line-height: 1.6;
-        }
-
-        .live-dot {
-            display: inline-block;
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: var(--accent);
-            margin-right: 5px;
-            animation: pulse 2s ease infinite;
-        }
-
-        /* ── KPI Bar ── */
-        .kpi-bar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 14px;
-            margin-bottom: 28px;
-            animation: fadeUp 0.5s 0.1s ease both;
-        }
-
-        .kpi-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 18px 20px;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
+        .kpi-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; animation: fadeUp 0.5s 0.1s ease both; }
+        .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
         .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-
-        .kpi-card::after {
-            content: '';
-            position: absolute;
-            inset: 0 0 auto 0;
-            height: 2px;
-        }
+        .kpi-card::after { content: ''; position: absolute; inset: 0 0 auto 0; height: 2px; }
         .kpi-card.green::after  { background: var(--accent); }
         .kpi-card.blue::after   { background: var(--accent2); }
         .kpi-card.orange::after { background: var(--warn); }
         .kpi-card.red::after    { background: var(--danger); }
-
-        .kpi-label {
-            font-size: 0.72rem;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-bottom: 8px;
-        }
-
-        .kpi-value {
-            font-family: var(--font-head);
-            font-size: 1.7rem;
-            font-weight: 700;
-            line-height: 1;
-        }
-
+        .kpi-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+        .kpi-value { font-family: 'Syne', sans-serif; font-size: 1.7rem; font-weight: 700; line-height: 1; }
         .kpi-card.green  .kpi-value { color: var(--accent); }
         .kpi-card.blue   .kpi-value { color: var(--accent2); }
         .kpi-card.orange .kpi-value { color: var(--warn); }
         .kpi-card.red    .kpi-value { color: var(--danger); }
+        .kpi-sub { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+        .kpi-card.locked { filter: blur(5px); pointer-events: none; opacity: 0.4; }
 
-        .kpi-sub {
-            font-size: 0.72rem;
-            color: var(--muted);
-            margin-top: 4px;
-        }
+        .grid { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; grid-template-areas: "chart chart" "produits ventes" "alertes alertes"; }
+        @media (max-width: 720px) { .grid { grid-template-columns: 1fr; grid-template-areas: "chart" "alertes" "produits" "ventes"; } }
 
-        /* ── Grid ── */
-        .grid {
-            display: grid;
-            gap: 20px;
-            grid-template-columns: 1fr 1fr;
-            grid-template-areas:
-                "chart  chart"
-                "produits ventes"
-                "alertes alertes";
-        }
-
-        @media (max-width: 720px) {
-            .grid {
-                grid-template-columns: 1fr;
-                grid-template-areas:
-                    "chart"
-                    "alertes"
-                    "produits"
-                    "ventes";
-            }
-        }
-
-        /* ── Card ── */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 22px 22px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            box-shadow: var(--shadow);
-            animation: fadeUp 0.5s ease both;
-        }
-
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--shadow); animation: fadeUp 0.5s ease both; }
         .card:nth-child(1) { animation-delay: 0.15s; }
         .card:nth-child(2) { animation-delay: 0.25s; }
         .card:nth-child(3) { animation-delay: 0.35s; }
         .card:nth-child(4) { animation-delay: 0.45s; }
 
-        .card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+        .card.locked { position: relative; }
+        .card.locked > *:not(.lock-overlay) { opacity: 0.15; pointer-events: none; }
+        .lock-overlay { position: absolute; inset: 0; display: grid; place-items: center; border-radius: var(--radius); background: rgba(13,17,23,0.6); backdrop-filter: blur(3px); font-size: 0.82rem; color: var(--muted); text-align: center; padding: 20px; pointer-events: none; line-height: 1.6; }
 
-        .card-title {
-            font-family: var(--font-head);
-            font-size: 0.95rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .card-header { display: flex; align-items: center; justify-content: space-between; }
+        .card-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .card-title .icon { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 15px; background: var(--surface2); }
+        .badge { font-size: 0.68rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; background: var(--surface2); color: var(--muted); }
 
-        .card-title .icon {
-            width: 30px; height: 30px;
-            border-radius: 8px;
-            display: grid;
-            place-items: center;
-            font-size: 15px;
-            background: var(--surface2);
-        }
-
-        .badge {
-            font-size: 0.68rem;
-            font-weight: 600;
-            padding: 3px 9px;
-            border-radius: 20px;
-            background: var(--surface2);
-            color: var(--muted);
-        }
-
-        /* ── Chart area ── */
-        .area-chart { grid-area: chart; }
+        .area-chart    { grid-area: chart; }
         .area-produits { grid-area: produits; }
         .area-ventes   { grid-area: ventes; }
         .area-alertes  { grid-area: alertes; }
 
-        .chart-wrap {
-            position: relative;
-            height: 220px;
-        }
+        .chart-wrap { position: relative; height: 220px; }
 
-        /* ── List ── */
-        .data-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-height: 320px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
+        .data-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
         .data-list::-webkit-scrollbar { width: 4px; }
-        .data-list::-webkit-scrollbar-track { background: transparent; }
         .data-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-        .data-item {
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.15s;
-            animation: fadeIn 0.3s ease both;
-        }
-
+        .data-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; animation: fadeIn 0.3s ease both; }
         .data-item:hover { background: rgba(255,255,255,0.04); }
-
         .item-left { display: flex; flex-direction: column; gap: 2px; }
         .item-name { font-size: 0.88rem; font-weight: 500; }
         .item-sub  { font-size: 0.73rem; color: var(--muted); }
+        .item-right { font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
 
-        .item-right {
-            font-family: var(--font-head);
-            font-size: 0.92rem;
-            font-weight: 700;
-            color: var(--accent);
-            white-space: nowrap;
-        }
-
-        /* ── Alertes ── */
-        .alert-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px 16px;
-            animation: fadeIn 0.3s ease both;
-        }
-
-        .alert-dot {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
+        .alert-item { display: flex; align-items: center; gap: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; animation: fadeIn 0.3s ease both; }
+        .alert-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
         .alert-dot.red    { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
         .alert-dot.orange { background: var(--warn);   box-shadow: 0 0 8px var(--warn); }
-        .alert-dot.yellow { background: #f0d000;        box-shadow: 0 0 8px #f0d000; }
-
+        .alert-dot.yellow { background: #f0d000;       box-shadow: 0 0 8px #f0d000; }
         .alert-name { font-size: 0.88rem; font-weight: 500; }
         .alert-date { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
-
-        .alert-badge {
-            margin-left: auto;
-            font-size: 0.67rem;
-            font-weight: 700;
-            padding: 3px 9px;
-            border-radius: 20px;
-            flex-shrink: 0;
-        }
+        .alert-badge { margin-left: auto; font-size: 0.67rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; }
         .alert-badge.red    { background: rgba(255,77,77,0.15);  color: var(--danger); }
         .alert-badge.orange { background: rgba(245,166,35,0.15); color: var(--warn); }
         .alert-badge.yellow { background: rgba(240,208,0,0.15);  color: #f0d000; }
 
-        /* ── Empty / Loading ── */
-        .empty-state {
-            padding: 28px;
-            text-align: center;
-            color: var(--muted);
-            font-size: 0.85rem;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 18px; height: 18px;
-            border: 2px solid var(--border);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-
-        /* ── Refresh button ── */
-        .btn-refresh {
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--muted);
-            font-size: 0.75rem;
-            font-family: var(--font-body);
-            padding: 5px 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+        .empty-state { padding: 28px; text-align: center; color: var(--muted); font-size: 0.85rem; }
+        .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle; }
+        .btn-refresh { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 0.75rem; font-family: 'DM Sans', sans-serif; padding: 5px 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
         .btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
+        .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 4px; animation: pulse 2s ease infinite; }
 
-        /* ═══════════════════════════════════════
-           ANIMATIONS
-        ═══════════════════════════════════════ */
-        @keyframes fadeDown  { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform: none; } }
-        @keyframes fadeUp    { from { opacity:0; transform: translateY(16px);  } to { opacity:1; transform: none; } }
-        @keyframes fadeIn    { from { opacity:0; }                               to { opacity:1; } }
-        @keyframes spin      { to { transform: rotate(360deg); } }
-        @keyframes pulse     { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+        @keyframes fadeDown { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform: none; } }
+        @keyframes fadeUp   { from { opacity:0; transform: translateY(16px);  } to { opacity:1; transform: none; } }
+        @keyframes fadeIn   { from { opacity:0; }                               to { opacity:1; } }
+        @keyframes spin     { to { transform: rotate(360deg); } }
+        @keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
     </style>
 </head>
 <body>
 <div class="wrapper">
 
-    <!-- ── Header ── -->
     <header>
         <div class="logo">
             <div class="logo-icon">🐟</div>
             <h1>Aqua<span>Dash</span></h1>
         </div>
-        <div class="header-meta">
-            <span class="live-dot"></span>Synchronisé avec Supabase<br>
-            <span id="last-update">–</span>
+        <div class="header-right">
+            <div class="user-pill">
+                <div class="user-avatar" id="user-avatar">?</div>
+                <span class="user-name" id="user-name">–</span>
+                <span class="role-pill employe" id="user-role-badge">–</span>
+            </div>
+            <button class="btn-header admin" id="btn-admin" style="display:none" onclick="window.location.href='admin.html'">⚙️ Admin</button>
+            <button class="btn-header" onclick="Auth.logout()">Déconnexion</button>
         </div>
     </header>
 
-    <!-- ── KPI Bar ── -->
+    <div class="access-banner" id="access-banner">
+        🔒 Certaines sections sont masquées selon vos droits. Contactez votre responsable pour un accès étendu.
+    </div>
+
+    <!-- KPIs -->
     <div class="kpi-bar">
-        <div class="kpi-card green">
+        <div class="kpi-card green" id="kpi-card-jour">
             <div class="kpi-label">Ventes du jour</div>
             <div class="kpi-value" id="kpi-jour">–</div>
             <div class="kpi-sub">FCFA aujourd'hui</div>
         </div>
-        <div class="kpi-card blue">
+        <div class="kpi-card blue" id="kpi-card-total">
             <div class="kpi-label">Total factures</div>
             <div class="kpi-value" id="kpi-total">–</div>
-            <div class="kpi-sub">sur toutes les dates</div>
+            <div class="kpi-sub">toutes les dates</div>
         </div>
         <div class="kpi-card orange">
             <div class="kpi-label">Produits en stock</div>
@@ -422,28 +177,20 @@
         </div>
     </div>
 
-    <!-- ── Main Grid ── -->
+    <!-- Grid -->
     <div class="grid">
 
-        <!-- Graphique -->
-        <div class="card area-chart">
+        <div class="card area-chart" id="card-chart">
             <div class="card-header">
-                <div class="card-title">
-                    <div class="icon">📊</div> Ventes par jour
-                </div>
+                <div class="card-title"><div class="icon">📊</div>Ventes par jour</div>
                 <button class="btn-refresh" onclick="loadChart()">↻ Actualiser</button>
             </div>
-            <div class="chart-wrap">
-                <canvas id="chartVentes"></canvas>
-            </div>
+            <div class="chart-wrap"><canvas id="chartVentes"></canvas></div>
         </div>
 
-        <!-- Produits -->
         <div class="card area-produits">
             <div class="card-header">
-                <div class="card-title">
-                    <div class="icon">🐟</div> Produits
-                </div>
+                <div class="card-title"><div class="icon">🐟</div>Produits</div>
                 <span class="badge" id="badge-produits">…</span>
             </div>
             <ul class="data-list" id="produits">
@@ -451,12 +198,9 @@
             </ul>
         </div>
 
-        <!-- Ventes -->
-        <div class="card area-ventes">
+        <div class="card area-ventes" id="card-ventes">
             <div class="card-header">
-                <div class="card-title">
-                    <div class="icon">💰</div> Historique ventes
-                </div>
+                <div class="card-title"><div class="icon">💰</div>Historique ventes</div>
                 <span class="badge" id="badge-ventes">…</span>
             </div>
             <ul class="data-list" id="ventes">
@@ -464,12 +208,9 @@
             </ul>
         </div>
 
-        <!-- Alertes -->
         <div class="card area-alertes">
             <div class="card-header">
-                <div class="card-title">
-                    <div class="icon">⚠️</div> Alertes expiration
-                </div>
+                <div class="card-title"><div class="icon">⚠️</div>Alertes expiration</div>
                 <span class="badge" id="badge-alertes">…</span>
             </div>
             <div id="alertes" style="display:flex;flex-direction:column;gap:8px;">
@@ -477,9 +218,10 @@
             </div>
         </div>
 
-    </div><!-- /grid -->
-</div><!-- /wrapper -->
+    </div>
+</div>
 
+<script src="js/auth.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
