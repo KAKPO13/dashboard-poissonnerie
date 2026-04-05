@@ -1,227 +1,460 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>AquaDash – Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg:       #0d1117;
-            --surface:  #161b22;
-            --surface2: #1e2530;
-            --border:   rgba(255,255,255,0.07);
-            --accent:   #00c9a7;
-            --accent2:  #0070f3;
-            --warn:     #f5a623;
-            --danger:   #ff4d4d;
-            --text:     #e6edf3;
-            --muted:    #8b949e;
-            --radius:   14px;
-            --shadow:   0 4px 32px rgba(0,0,0,0.4);
-        }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
-        body::before {
-            content: ''; position: fixed; inset: 0;
-            background: radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,201,167,0.08) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 110%, rgba(0,112,243,0.06) 0%, transparent 60%);
-            pointer-events: none; z-index: 0;
-        }
-        .wrapper { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AquaDash – Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #FFFBF5;
+  --surface:   #FFFFFF;
+  --surface2:  #FFF5ED;
+  --border:    #E8E0D8;
+  --border2:   rgba(255,107,26,0.2);
+  --orange:    #FF6B1A;
+  --orange-dk: #E05510;
+  --orange-lt: #FFF0E8;
+  --text1:     #1A1A1A;
+  --text2:     #888880;
+  --text3:     #D0CBC4;
+  --green:     #2E7D32;
+  --green-bg:  #EDF7ED;
+  --blue:      #185FA5;
+  --blue-bg:   #E6F1FB;
+  --amber:     #BA7517;
+  --amber-bg:  #FAEEDA;
+  --red:       #A32D2D;
+  --red-bg:    #FCEBEB;
+  --radius:    14px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text1);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+.wrapper { max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
 
-        header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid var(--border); animation: fadeDown 0.5s ease both; }
-        .logo { display: flex; align-items: center; gap: 12px; }
-        .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 12px; display: grid; place-items: center; font-size: 22px; }
-        .logo h1 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; }
-        .logo h1 span { color: var(--accent); }
+/* ── Header ─────────────────────────────────────────── */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 32px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  animation: fadeDown 0.4s ease both;
+}
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon {
+  width: 42px; height: 42px;
+  background: var(--orange);
+  border-radius: 12px;
+  display: grid; place-items: center;
+  font-size: 20px;
+}
+.logo h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.4rem; font-weight: 800;
+  letter-spacing: -0.5px; color: var(--text1);
+}
+.logo h1 span { color: var(--orange); }
 
-        .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-        .user-pill { display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--border); border-radius: 30px; padding: 5px 14px 5px 7px; }
-        .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #0d1117; }
-        .user-name { font-size: 0.82rem; font-weight: 500; }
-        .role-pill { font-size: 0.65rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
-        .role-pill.admin   { background: rgba(245,166,35,0.15); color: var(--warn);   border: 1px solid rgba(245,166,35,0.25); }
-        .role-pill.gerant  { background: rgba(0,112,243,0.15);  color: #4da3ff;       border: 1px solid rgba(0,112,243,0.25); }
-        .role-pill.employe { background: rgba(0,201,167,0.12);  color: var(--accent); border: 1px solid rgba(0,201,167,0.2); }
-        .btn-header { background: none; border: 1px solid var(--border); border-radius: 9px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.78rem; padding: 7px 13px; cursor: pointer; transition: all 0.2s; }
-        .btn-header:hover { border-color: var(--accent); color: var(--accent); }
-        .btn-header.admin { border-color: rgba(245,166,35,0.3); color: var(--warn); }
-        .btn-header.admin:hover { background: rgba(245,166,35,0.08); }
+.header-right {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; justify-content: flex-end;
+}
+.user-pill {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 30px; padding: 5px 14px 5px 7px;
+}
+.user-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--orange);
+  display: grid; place-items: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+}
+.user-name { font-size: 0.82rem; font-weight: 500; color: var(--text1); }
 
-        .access-banner { background: rgba(0,112,243,0.08); border: 1px solid rgba(0,112,243,0.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.82rem; color: #4da3ff; display: none; align-items: center; gap: 10px; }
-        .access-banner.visible { display: flex; }
+.role-pill {
+  font-size: 0.65rem; font-weight: 700;
+  padding: 3px 9px; border-radius: 20px;
+}
+.role-pill.admin   { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(186,117,23,0.25); }
+.role-pill.gerant  { background: var(--blue-bg);  color: var(--blue);  border: 1px solid rgba(24,95,165,0.25); }
+.role-pill.employe { background: var(--orange-lt);color: var(--orange);border: 1px solid var(--border2); }
 
-        .kpi-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; animation: fadeUp 0.5s 0.1s ease both; }
-        .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
-        .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-        .kpi-card::after { content: ''; position: absolute; inset: 0 0 auto 0; height: 2px; }
-        .kpi-card.green::after  { background: var(--accent); }
-        .kpi-card.blue::after   { background: var(--accent2); }
-        .kpi-card.orange::after { background: var(--warn); }
-        .kpi-card.red::after    { background: var(--danger); }
-        .kpi-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-        .kpi-value { font-family: 'Syne', sans-serif; font-size: 1.7rem; font-weight: 700; line-height: 1; }
-        .kpi-card.green  .kpi-value { color: var(--accent); }
-        .kpi-card.blue   .kpi-value { color: var(--accent2); }
-        .kpi-card.orange .kpi-value { color: var(--warn); }
-        .kpi-card.red    .kpi-value { color: var(--danger); }
-        .kpi-sub { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
-        .kpi-card.locked { filter: blur(5px); pointer-events: none; opacity: 0.4; }
+.btn-header {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 9px; color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem; padding: 7px 13px;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-header:hover { border-color: var(--orange); color: var(--orange); }
+.btn-header.admin { border-color: rgba(186,117,23,0.3); color: var(--amber); }
+.btn-header.admin:hover { background: var(--amber-bg); }
 
-        .grid { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; grid-template-areas: "chart chart" "produits ventes" "alertes alertes"; }
-        @media (max-width: 720px) { .grid { grid-template-columns: 1fr; grid-template-areas: "chart" "alertes" "produits" "ventes"; } }
+/* ── Banner ─────────────────────────────────────────── */
+.access-banner {
+  background: var(--blue-bg);
+  border: 1.5px solid rgba(24,95,165,0.2);
+  border-radius: 10px; padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 0.82rem; color: var(--blue);
+  display: none; align-items: center; gap: 10px;
+}
+.access-banner.visible { display: flex; }
 
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--shadow); animation: fadeUp 0.5s ease both; }
-        .card:nth-child(1) { animation-delay: 0.15s; }
-        .card:nth-child(2) { animation-delay: 0.25s; }
-        .card:nth-child(3) { animation-delay: 0.35s; }
-        .card:nth-child(4) { animation-delay: 0.45s; }
+/* ── KPIs ───────────────────────────────────────────── */
+.kpi-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px; margin-bottom: 28px;
+  animation: fadeUp 0.4s 0.1s ease both;
+}
+.kpi-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: default;
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(255,107,26,0.08);
+}
+.kpi-card::after {
+  content: ''; position: absolute;
+  inset: 0 0 auto 0; height: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.kpi-card.green::after  { background: var(--green); }
+.kpi-card.blue::after   { background: var(--blue); }
+.kpi-card.orange::after { background: var(--orange); }
+.kpi-card.red::after    { background: var(--red); }
 
-        .card.locked { position: relative; }
-        .card.locked > *:not(.lock-overlay) { opacity: 0.15; pointer-events: none; }
-        .lock-overlay { position: absolute; inset: 0; display: grid; place-items: center; border-radius: var(--radius); background: rgba(13,17,23,0.6); backdrop-filter: blur(3px); font-size: 0.82rem; color: var(--muted); text-align: center; padding: 20px; pointer-events: none; line-height: 1.6; }
+.kpi-label {
+  font-size: 0.72rem; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.kpi-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.7rem; font-weight: 700; line-height: 1;
+}
+.kpi-card.green  .kpi-value { color: var(--green); }
+.kpi-card.blue   .kpi-value { color: var(--blue); }
+.kpi-card.orange .kpi-value { color: var(--orange); }
+.kpi-card.red    .kpi-value { color: var(--red); }
+.kpi-sub { font-size: 0.72rem; color: var(--text2); margin-top: 4px; }
+.kpi-card.locked { filter: blur(5px); pointer-events: none; opacity: 0.4; }
 
-        .card-header { display: flex; align-items: center; justify-content: space-between; }
-        .card-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-        .card-title .icon { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 15px; background: var(--surface2); }
-        .badge { font-size: 0.68rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; background: var(--surface2); color: var(--muted); }
+/* ── Grid ───────────────────────────────────────────── */
+.grid {
+  display: grid; gap: 20px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "chart chart"
+    "produits ventes"
+    "alertes alertes";
+}
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: "chart" "alertes" "produits" "ventes";
+  }
+}
 
-        .area-chart    { grid-area: chart; }
-        .area-produits { grid-area: produits; }
-        .area-ventes   { grid-area: ventes; }
-        .area-alertes  { grid-area: alertes; }
+/* ── Cards ──────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px; display: flex;
+  flex-direction: column; gap: 16px;
+  animation: fadeUp 0.4s ease both;
+}
+.card:nth-child(1) { animation-delay: 0.15s; }
+.card:nth-child(2) { animation-delay: 0.25s; }
+.card:nth-child(3) { animation-delay: 0.35s; }
+.card:nth-child(4) { animation-delay: 0.45s; }
 
-        .chart-wrap { position: relative; height: 220px; }
+.card.locked { position: relative; }
+.card.locked > *:not(.lock-overlay) { opacity: 0.15; pointer-events: none; }
+.lock-overlay {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  border-radius: var(--radius);
+  background: rgba(255,251,245,0.8);
+  font-size: 0.82rem; color: var(--text2);
+  text-align: center; padding: 20px;
+  pointer-events: none; line-height: 1.6;
+}
+.card-header { display: flex; align-items: center; justify-content: space-between; }
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.95rem; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text1);
+}
+.card-title .icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: grid; place-items: center; font-size: 15px;
+  background: var(--orange-lt);
+  border: 1px solid var(--border2);
+}
+.badge {
+  font-size: 0.68rem; font-weight: 600;
+  padding: 3px 9px; border-radius: 20px;
+  background: var(--surface2); color: var(--text2);
+  border: 1px solid var(--border);
+}
 
-        .data-list { list-style: none; display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
-        .data-list::-webkit-scrollbar { width: 4px; }
-        .data-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-        .data-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; animation: fadeIn 0.3s ease both; }
-        .data-item:hover { background: rgba(255,255,255,0.04); }
-        .item-left { display: flex; flex-direction: column; gap: 2px; }
-        .item-name { font-size: 0.88rem; font-weight: 500; }
-        .item-sub  { font-size: 0.73rem; color: var(--muted); }
-        .item-right { font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.area-chart    { grid-area: chart; }
+.area-produits { grid-area: produits; }
+.area-ventes   { grid-area: ventes; }
+.area-alertes  { grid-area: alertes; }
 
-        .alert-item { display: flex; align-items: center; gap: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; animation: fadeIn 0.3s ease both; }
-        .alert-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-        .alert-dot.red    { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
-        .alert-dot.orange { background: var(--warn);   box-shadow: 0 0 8px var(--warn); }
-        .alert-dot.yellow { background: #f0d000;       box-shadow: 0 0 8px #f0d000; }
-        .alert-name { font-size: 0.88rem; font-weight: 500; }
-        .alert-date { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
-        .alert-badge { margin-left: auto; font-size: 0.67rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; }
-        .alert-badge.red    { background: rgba(255,77,77,0.15);  color: var(--danger); }
-        .alert-badge.orange { background: rgba(245,166,35,0.15); color: var(--warn); }
-        .alert-badge.yellow { background: rgba(240,208,0,0.15);  color: #f0d000; }
+.chart-wrap { position: relative; height: 220px; }
 
-        .empty-state { padding: 28px; text-align: center; color: var(--muted); font-size: 0.85rem; }
-        .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 8px; vertical-align: middle; }
-        .btn-refresh { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 0.75rem; font-family: 'DM Sans', sans-serif; padding: 5px 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
-        .btn-refresh:hover { border-color: var(--accent); color: var(--accent); }
-        .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 4px; animation: pulse 2s ease infinite; }
+/* ── Lists ──────────────────────────────────────────── */
+.data-list {
+  list-style: none; display: flex;
+  flex-direction: column; gap: 8px;
+  max-height: 320px; overflow-y: auto; padding-right: 4px;
+}
+.data-list::-webkit-scrollbar { width: 4px; }
+.data-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        @keyframes fadeDown { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform: none; } }
-        @keyframes fadeUp   { from { opacity:0; transform: translateY(16px);  } to { opacity:1; transform: none; } }
-        @keyframes fadeIn   { from { opacity:0; }                               to { opacity:1; } }
-        @keyframes spin     { to { transform: rotate(360deg); } }
-        @keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-    </style>
+.data-item {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: background 0.15s, border-color 0.15s;
+  animation: fadeIn 0.3s ease both;
+}
+.data-item:hover { background: var(--orange-lt); border-color: var(--border2); }
+.item-left { display: flex; flex-direction: column; gap: 2px; }
+.item-name { font-size: 0.88rem; font-weight: 500; color: var(--text1); }
+.item-sub  { font-size: 0.73rem; color: var(--text2); }
+.item-right {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.92rem; font-weight: 700;
+  color: var(--orange); white-space: nowrap;
+}
+
+/* ── Alerts ─────────────────────────────────────────── */
+.alert-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 12px 16px;
+  transition: background 0.15s, border-color 0.15s;
+  animation: fadeIn 0.3s ease both;
+}
+.alert-item:hover { background: var(--orange-lt); border-color: var(--border2); }
+.alert-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.alert-dot.red    { background: var(--red); }
+.alert-dot.orange { background: var(--orange); }
+.alert-dot.yellow { background: var(--amber); }
+.alert-name { font-size: 0.88rem; font-weight: 500; color: var(--text1); }
+.alert-date { font-size: 0.73rem; color: var(--text2); margin-top: 2px; }
+.alert-badge {
+  margin-left: auto; font-size: 0.67rem; font-weight: 700;
+  padding: 3px 9px; border-radius: 20px; flex-shrink: 0;
+}
+.alert-badge.red    { background: var(--red-bg);    color: var(--red); }
+.alert-badge.orange { background: var(--orange-lt); color: var(--orange-dk); }
+.alert-badge.yellow { background: var(--amber-bg);  color: var(--amber); }
+
+/* ── Utils ──────────────────────────────────────────── */
+.empty-state { padding: 28px; text-align: center; color: var(--text2); font-size: 0.85rem; }
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid var(--border); border-top-color: var(--orange);
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+  margin-right: 8px; vertical-align: middle;
+}
+.btn-refresh {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 8px; color: var(--text2);
+  font-size: 0.75rem; font-family: 'DM Sans', sans-serif;
+  padding: 5px 12px; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 5px;
+}
+.btn-refresh:hover { border-color: var(--orange); color: var(--orange); }
+.live-dot {
+  display: inline-block; width: 7px; height: 7px;
+  border-radius: 50%; background: var(--green);
+  margin-right: 4px; animation: pulse 2s ease infinite;
+}
+
+@keyframes fadeDown { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform: none; } }
+@keyframes fadeUp   { from { opacity:0; transform: translateY(16px);  } to { opacity:1; transform: none; } }
+@keyframes fadeIn   { from { opacity:0; }                               to { opacity:1; } }
+@keyframes spin     { to { transform: rotate(360deg); } }
+@keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+</style>
 </head>
 <body>
 <div class="wrapper">
 
-    <header>
-        <div class="logo">
-            <div class="logo-icon">🐟</div>
-            <h1>Aqua<span>Dash</span></h1>
-        </div>
-        <div class="header-right">
-            <div class="user-pill">
-                <div class="user-avatar" id="user-avatar">?</div>
-                <span class="user-name" id="user-name">–</span>
-                <span class="role-pill employe" id="user-role-badge">–</span>
-            </div>
-            <button class="btn-header admin" id="btn-admin" style="display:none" onclick="window.location.href='admin.html'">⚙️ Admin</button>
-            <button class="btn-header" onclick="Auth.logout()">Déconnexion</button>
-        </div>
-    </header>
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🐟</div>
+      <h1>Aqua<span>Dash</span></h1>
+    </div>
+    <div class="header-right">
+      <div class="user-pill">
+        <div class="user-avatar" id="user-avatar">AD</div>
+        <span class="user-name" id="user-name">Admin</span>
+        <span class="role-pill admin" id="user-role-badge">Admin</span>
+      </div>
+      <button class="btn-header admin" id="btn-admin" onclick="window.location.href='admin.html'">⚙️ Admin</button>
+      <button class="btn-header" onclick="Auth.logout()">Déconnexion</button>
+    </div>
+  </header>
 
-    <div class="access-banner" id="access-banner">
-        🔒 Certaines sections sont masquées selon vos droits. Contactez votre responsable pour un accès étendu.
+  <div class="access-banner" id="access-banner">
+    🔒 Certaines sections sont masquées selon vos droits. Contactez votre responsable pour un accès étendu.
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-bar">
+    <div class="kpi-card green" id="kpi-card-jour">
+      <div class="kpi-label">Ventes du jour</div>
+      <div class="kpi-value" id="kpi-jour">–</div>
+      <div class="kpi-sub">FCFA aujourd'hui</div>
+    </div>
+    <div class="kpi-card blue" id="kpi-card-total">
+      <div class="kpi-label">Total factures</div>
+      <div class="kpi-value" id="kpi-total">–</div>
+      <div class="kpi-sub">toutes les dates</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-label">Produits en stock</div>
+      <div class="kpi-value" id="kpi-produits">–</div>
+      <div class="kpi-sub">références actives</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Alertes expiration</div>
+      <div class="kpi-value" id="kpi-alertes">–</div>
+      <div class="kpi-sub">à traiter</div>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid">
+
+    <div class="card area-chart" id="card-chart">
+      <div class="card-header">
+        <div class="card-title"><div class="icon">📊</div>Ventes par jour</div>
+        <button class="btn-refresh" onclick="loadChart()">↻ Actualiser</button>
+      </div>
+      <div class="chart-wrap"><canvas id="chartVentes"></canvas></div>
     </div>
 
-    <!-- KPIs -->
-    <div class="kpi-bar">
-        <div class="kpi-card green" id="kpi-card-jour">
-            <div class="kpi-label">Ventes du jour</div>
-            <div class="kpi-value" id="kpi-jour">–</div>
-            <div class="kpi-sub">FCFA aujourd'hui</div>
-        </div>
-        <div class="kpi-card blue" id="kpi-card-total">
-            <div class="kpi-label">Total factures</div>
-            <div class="kpi-value" id="kpi-total">–</div>
-            <div class="kpi-sub">toutes les dates</div>
-        </div>
-        <div class="kpi-card orange">
-            <div class="kpi-label">Produits en stock</div>
-            <div class="kpi-value" id="kpi-produits">–</div>
-            <div class="kpi-sub">références actives</div>
-        </div>
-        <div class="kpi-card red">
-            <div class="kpi-label">Alertes expiration</div>
-            <div class="kpi-value" id="kpi-alertes">–</div>
-            <div class="kpi-sub">à traiter</div>
-        </div>
+    <div class="card area-produits">
+      <div class="card-header">
+        <div class="card-title"><div class="icon">🐟</div>Produits</div>
+        <span class="badge" id="badge-produits">…</span>
+      </div>
+      <ul class="data-list" id="produits">
+        <li class="empty-state"><span class="spinner"></span>Chargement…</li>
+      </ul>
     </div>
 
-    <!-- Grid -->
-    <div class="grid">
-
-        <div class="card area-chart" id="card-chart">
-            <div class="card-header">
-                <div class="card-title"><div class="icon">📊</div>Ventes par jour</div>
-                <button class="btn-refresh" onclick="loadChart()">↻ Actualiser</button>
-            </div>
-            <div class="chart-wrap"><canvas id="chartVentes"></canvas></div>
-        </div>
-
-        <div class="card area-produits">
-            <div class="card-header">
-                <div class="card-title"><div class="icon">🐟</div>Produits</div>
-                <span class="badge" id="badge-produits">…</span>
-            </div>
-            <ul class="data-list" id="produits">
-                <li class="empty-state"><span class="spinner"></span>Chargement…</li>
-            </ul>
-        </div>
-
-        <div class="card area-ventes" id="card-ventes">
-            <div class="card-header">
-                <div class="card-title"><div class="icon">💰</div>Historique ventes</div>
-                <span class="badge" id="badge-ventes">…</span>
-            </div>
-            <ul class="data-list" id="ventes">
-                <li class="empty-state"><span class="spinner"></span>Chargement…</li>
-            </ul>
-        </div>
-
-        <div class="card area-alertes">
-            <div class="card-header">
-                <div class="card-title"><div class="icon">⚠️</div>Alertes expiration</div>
-                <span class="badge" id="badge-alertes">…</span>
-            </div>
-            <div id="alertes" style="display:flex;flex-direction:column;gap:8px;">
-                <div class="empty-state"><span class="spinner"></span>Chargement…</div>
-            </div>
-        </div>
-
+    <div class="card area-ventes" id="card-ventes">
+      <div class="card-header">
+        <div class="card-title"><div class="icon">💰</div>Historique ventes</div>
+        <span class="badge" id="badge-ventes">…</span>
+      </div>
+      <ul class="data-list" id="ventes">
+        <li class="empty-state"><span class="spinner"></span>Chargement…</li>
+      </ul>
     </div>
+
+    <div class="card area-alertes">
+      <div class="card-header">
+        <div class="card-title"><div class="icon">⚠️</div>Alertes expiration</div>
+        <span class="badge" id="badge-alertes">…</span>
+      </div>
+      <div id="alertes" style="display:flex;flex-direction:column;gap:8px">
+        <div class="empty-state"><span class="spinner"></span>Chargement…</div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
+
+<script>
+/* ── Graphique Chart.js ──────────────────────────────── */
+function loadChart() {
+  const ctx = document.getElementById('chartVentes').getContext('2d');
+  if (window._chart) window._chart.destroy();
+
+  const labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const data   = [98000, 142000, 87000, 165000, 210000, 184500, 0];
+
+  window._chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Ventes FCFA',
+        data,
+        backgroundColor: data.map((_, i) =>
+          i === 5 ? 'rgba(255,107,26,1)' : 'rgba(255,107,26,0.18)'),
+        borderColor: data.map((_, i) =>
+          i === 5 ? '#E05510' : 'rgba(255,107,26,0.4)'),
+        borderWidth: 1.5,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: v => new Intl.NumberFormat('fr-FR').format(v.raw) + ' FCFA'
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(232,224,216,0.5)' },
+          ticks: { color: '#888880', font: { size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(232,224,216,0.5)' },
+          ticks: {
+            color: '#888880', font: { size: 11 },
+            callback: v => (v / 1000) + 'k'
+          }
+        }
+      }
+    }
+  });
+}
+
+/* Appelé par app.js après chargement des données réelles.
+   Si app.js n'est pas encore disponible, on affiche des données
+   d'exemple pour que la page ne soit pas vide. */
+if (typeof window.Auth === 'undefined') {
+  loadChart();
+}
+</script>
 </body>
 </html>
