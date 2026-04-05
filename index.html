@@ -4,18 +4,74 @@
 <head>
     <meta charset="UTF-8">
     <title>Dashboard Poissonnerie</title>
+
+    <!-- 📱 Responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- 📊 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- 🎨 STYLE -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        canvas {
+            width: 100% !important;
+            max-height: 300px;
+        }
+    </style>
 </head>
 
 <body>
 
-    <h2>📊 Dashboard</h2>
+    <h2>📊 Dashboard Poissonnerie</h2>
 
-    <h3>🐟 Produits</h3>
-    
-    <!-- 🔥 ICI -->
-    <ul id="produits"></ul>
+    <!-- 🐟 PRODUITS -->
+    <div class="card">
+        <h3>🐟 Produits</h3>
+        <ul id="produits"></ul>
+    </div>
 
-    <!-- 🔥 SCRIPT TOUJOURS EN BAS -->
+    <!-- 📈 GRAPH -->
+    <div class="card">
+        <h3>📈 Ventes</h3>
+        <canvas id="chartVentes"></canvas>
+    </div>
+
+    <!-- 🔥 SCRIPT -->
     <script src="js/app.js"></script>
 
 </body>
