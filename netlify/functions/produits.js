@@ -1,53 +1,54 @@
 /**
  * Netlify Function : produits
- * Récupère tous les produits depuis Supabase
- * Les clés API restent côté serveur (jamais exposées au frontend)
+ * Corrigé : toujours JSON en retour, jamais de HTML
  */
 
+function jsonResponse(statusCode, data) {
+    return {
+        statusCode,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        body: JSON.stringify(data)
+    };
+}
+
 export async function handler(event) {
+    if (event.httpMethod === "OPTIONS") {
+        return { statusCode: 200, headers: { "Access-Control-Allow-Origin": "*" }, body: "" };
+    }
 
-    // Vérification des variables d'environnement
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_KEY;
+    const SUPABASE_URL = process.env.SUPABASE_URL;
+    const SUPABASE_KEY = process.env.SUPABASE_KEY;
 
-    if (!url || !key) {
-        return {
-            statusCode: 500,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ error: "Configuration Supabase manquante" })
-        };
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
+        return jsonResponse(500, { error: "Configuration manquante : SUPABASE_URL ou SUPABASE_KEY absent" });
     }
 
     try {
-        const res = await fetch(url + "/rest/v1/produits?select=*", {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/produits?select=*`, {
             headers: {
-                apikey: key,
-                Authorization: "Bearer " + key,
-                "Content-Type": "application/json"
+                "apikey": SUPABASE_KEY,
+                "Authorization": `Bearer ${SUPABASE_KEY}`
             }
         });
 
-        if (!res.ok) {
-            throw new Error(`Supabase error ${res.status}: ${await res.text()}`);
+        const text = await res.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch {
+            console.error("[produits] Réponse non-JSON :", text.slice(0, 300));
+            return jsonResponse(502, { error: "Réponse inattendue de Supabase" });
         }
 
-        const data = await res.json();
+        if (!res.ok) {
+            console.error("[produits] Erreur Supabase :", data);
+            return jsonResponse(res.status, { error: data.message || "Erreur Supabase" });
+        }
 
-        return {
-            statusCode: 200,
-            headers: {
-                "Content-Type": "application/json",
-                "Cache-Control": "no-cache"
-            },
-            body: JSON.stringify(data)
-        };
+        return jsonResponse(200, data);
 
     } catch (err) {
-        console.error("[produits]", err.message);
-        return {
-            statusCode: 500,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ error: err.message })
-        };
+        console.error("[produits] Erreur :", err.message);
+        return jsonResponse(500, { error: err.message });
     }
 }
