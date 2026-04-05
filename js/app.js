@@ -1,7 +1,9 @@
 async function loadProduits() {
-    
+
     const res = await fetch("/.netlify/functions/produits");
     const data = await res.json();
+
+    console.log(data); // 🔥 IMPORTANT
 
     let html = "";
 
