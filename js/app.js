@@ -15,31 +15,14 @@ const TODAY = (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })()
 // ═══════════════════════════════════════
 
 (function init() {
-    // 1. Vérifier la session (redirige vers login si absent)
-    const session = Auth.requireAuth();
+    // Session déjà vérifiée par index.html — on charge juste les données
+    const session = Auth.getSession();
     if (!session) return;
 
-    // 2. Afficher les infos utilisateur dans le header
-    const initiales = (session.nom || session.email || "U")
-        .split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
-
-    document.getElementById("user-avatar").textContent = initiales;
-    document.getElementById("user-name").textContent   = session.nom || session.email;
-
-    const roleBadge = document.getElementById("user-role-badge");
-    const roleLabels = { admin: "🔑 Admin", gerant: "📋 Gérant", employe: "👷 Employé" };
-    roleBadge.textContent = roleLabels[session.role] || session.role;
-    roleBadge.className   = "role-pill " + session.role;
-
-    // 3. Bouton Admin uniquement pour les admins
-    if (session.role === "admin") {
-        document.getElementById("btn-admin").style.display = "block";
-    }
-
-    // 4. Appliquer les restrictions visuelles selon le rôle
+    // Appliquer les restrictions visuelles selon le rôle
     appliquerRestrictions(session.role);
 
-    // 5. Charger les données autorisées
+    // Charger les données autorisées
     chargerDonnees(session);
 })();
 

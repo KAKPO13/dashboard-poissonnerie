@@ -419,39 +419,41 @@ header {
 </div><!-- /wrapper -->
 
 <script src="js/auth.js"></script>
-<script src="js/app.js"></script>
 <script>
-// ── Affichage boutons selon rôle ──────────────────────
+// ── Guard + affichage rôle (doit s'exécuter après auth.js) ──
 (function applyRoleButtons() {
-    const session = Auth.getSession();
+    // 1. Vérifier la session — redirige vers login si absente
+    const session = Auth.requireAuth();
     if (!session) return;
 
+    // 2. Remplir les infos utilisateur dans le header
     const initiales = (session.nom || session.email || "U")
         .split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
 
-    document.getElementById("user-avatar").textContent    = initiales;
-    document.getElementById("user-name").textContent      = session.nom || session.email;
+    document.getElementById("user-avatar").textContent = initiales;
+    document.getElementById("user-name").textContent   = session.nom || session.email;
 
     const badge = document.getElementById("user-role-badge");
     const roleLabels = { admin:"🔑 Admin", gerant:"📋 Gérant", employe:"👷 Employé" };
     badge.textContent = roleLabels[session.role] || session.role;
     badge.className   = "role-pill " + session.role;
 
-    // Bouton Admin → uniquement admin
+    // 3. Bouton Admin → uniquement admin
     if (session.role === "admin") {
         document.getElementById("btn-admin").style.display = "block";
     }
 
-    // Bouton Gérant → gérant ET admin (l'admin peut aussi gérer la chambre froide)
+    // 4. Bouton Gérant → gérant ET admin
     if (session.role === "gerant" || session.role === "admin") {
         document.getElementById("btn-gerant").style.display = "block";
     }
 
-    // Bannière accès restreint → employé uniquement
+    // 5. Bannière accès restreint → employé uniquement
     if (session.role === "employe") {
         document.getElementById("access-banner").classList.add("visible");
     }
 })();
 </script>
+<script src="js/app.js"></script>
 </body>
 </html>
