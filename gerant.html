@@ -6,332 +6,171 @@
     <title>AquaDash – Gérant</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg:         #FFFBF5;
-            --surface:    #FFFFFF;
-            --surface2:   #FFF5ED;
-            --surface3:   #FFF0E8;
-            --border:     #E8E0D8;
-            --border2:    rgba(255,107,26,0.2);
-            --orange:     #FF6B1A;
-            --orange-dk:  #E05510;
-            --orange-lt:  #FFF0E8;
-            --text1:      #1A1A1A;
-            --text2:      #888880;
-            --text3:      #D0CBC4;
-            --green:      #2E7D32;
-            --green-bg:   #EDF7ED;
-            --blue:       #185FA5;
-            --blue-bg:    #E6F1FB;
-            --amber:      #BA7517;
-            --amber-bg:   #FAEEDA;
-            --red:        #A32D2D;
-            --red-bg:     #FCEBEB;
-            --teal:       #0F6E56;
-            --teal-bg:    #E1F5EE;
-            --r:          14px;
-            --fh:         'Syne', sans-serif;
-            --fb:         'DM Sans', sans-serif;
+            --bg:      #0a0f0d;
+            --s1:      #111a14;
+            --s2:      #172010;
+            --s3:      #1e2a1a;
+            --border:  rgba(255,255,255,0.07);
+            --accent:  #4ade80;
+            --accent2: #22d3ee;
+            --warn:    #fbbf24;
+            --danger:  #f87171;
+            --blue:    #60a5fa;
+            --text:    #e8f5e9;
+            --muted:   #6b8f71;
+            --r:       14px;
+            --sh:      0 4px 32px rgba(0,0,0,0.5);
+            --fh:      'Syne', sans-serif;
+            --fb:      'DM Sans', sans-serif;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: var(--fb);
-            background: var(--bg);
-            color: var(--text1);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* ── Fond décoratif léger ── */
+        body { font-family: var(--fb); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
         body::before {
             content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
             background:
-                radial-gradient(ellipse 70% 50% at 5% 0%, rgba(255,107,26,0.05) 0%, transparent 55%),
-                radial-gradient(ellipse 50% 40% at 95% 100%, rgba(255,107,26,0.03) 0%, transparent 55%);
+                radial-gradient(ellipse 70% 50% at 5% 0%,   rgba(74,222,128,0.06) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 95% 100%, rgba(34,211,238,0.05) 0%, transparent 55%);
         }
+        /* Grille déco */
         body::after {
             content: ''; position: fixed; inset: 0; pointer-events: none;
-            background-image:
-                linear-gradient(rgba(232,224,216,0.4) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(232,224,216,0.4) 1px, transparent 1px);
+            background-image: linear-gradient(rgba(74,222,128,0.02) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(74,222,128,0.02) 1px, transparent 1px);
             background-size: 48px 48px;
         }
-
         .wrap { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 24px 20px 80px; }
 
         /* ── HEADER ── */
-        header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 28px; padding-bottom: 18px;
-            border-bottom: 1px solid var(--border);
-            animation: fd .4s ease both; flex-wrap: wrap; gap: 12px;
-        }
+        header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--border); animation: fd .4s ease both; flex-wrap: wrap; gap: 12px; }
         .logo { display: flex; align-items: center; gap: 12px; }
-        .logo-icon {
-            width: 42px; height: 42px; background: var(--orange);
-            border-radius: 12px; display: grid; place-items: center; font-size: 21px;
-        }
-        .logo h1 {
-            font-family: var(--fh); font-size: 1.35rem;
-            font-weight: 800; letter-spacing: -.5px; color: var(--text1);
-        }
-        .logo h1 span { color: var(--orange); }
-        .logo .tag {
-            font-size: .65rem; font-weight: 700; padding: 3px 9px;
-            border-radius: 20px; background: var(--orange-lt);
-            color: var(--orange); border: 1px solid var(--border2); margin-left: 4px;
-        }
+        .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 12px; display: grid; place-items: center; font-size: 21px; }
+        .logo h1 { font-family: var(--fh); font-size: 1.35rem; font-weight: 800; letter-spacing: -.5px; }
+        .logo h1 span { color: var(--accent); }
+        .logo .tag { font-size: .65rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: rgba(74,222,128,.12); color: var(--accent); border: 1px solid rgba(74,222,128,.25); margin-left: 4px; }
         .hright { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .user-pill {
-            display: flex; align-items: center; gap: 8px;
-            background: var(--surface); border: 1.5px solid var(--border);
-            border-radius: 30px; padding: 5px 14px 5px 7px;
-        }
-        .uav {
-            width: 28px; height: 28px; border-radius: 50%;
-            background: var(--orange); display: grid; place-items: center;
-            font-size: 11px; font-weight: 700; color: #fff;
-        }
-        .uname { font-size: .82rem; font-weight: 500; color: var(--text1); }
-        .btn-h {
-            background: var(--surface); border: 1.5px solid var(--border);
-            border-radius: 9px; color: var(--text2); font-family: var(--fb);
-            font-size: .78rem; padding: 7px 13px; cursor: pointer; transition: all .2s;
-        }
-        .btn-h:hover { border-color: var(--orange); color: var(--orange); }
+        .user-pill { display: flex; align-items: center; gap: 8px; background: var(--s1); border: 1px solid var(--border); border-radius: 30px; padding: 5px 14px 5px 7px; }
+        .uav { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #0a0f0d; }
+        .uname { font-size: .82rem; font-weight: 500; }
+        .btn-h { background: none; border: 1px solid var(--border); border-radius: 9px; color: var(--muted); font-family: var(--fb); font-size: .78rem; padding: 7px 13px; cursor: pointer; transition: all .2s; }
+        .btn-h:hover { border-color: var(--accent); color: var(--accent); }
 
         /* ── TABS ── */
-        .tabs {
-            display: flex; gap: 4px; background: var(--surface);
-            border: 1.5px solid var(--border); border-radius: 12px;
-            padding: 4px; margin-bottom: 24px; overflow-x: auto;
-            animation: fu .4s .1s ease both;
-        }
-        .tab {
-            flex-shrink: 0; padding: 9px 18px; border: none;
-            border-radius: 8px; background: transparent;
-            color: var(--text2); font-family: var(--fb); font-size: .84rem;
-            font-weight: 500; cursor: pointer; transition: all .2s; white-space: nowrap;
-        }
-        .tab.active { background: var(--orange-lt); color: var(--orange); font-weight: 700; }
-        .tab:hover:not(.active) { background: var(--surface2); color: var(--text1); }
+        .tabs { display: flex; gap: 4px; background: var(--s1); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 24px; overflow-x: auto; animation: fu .4s .1s ease both; }
+        .tab { flex-shrink: 0; padding: 9px 18px; border: none; border-radius: 8px; background: transparent; color: var(--muted); font-family: var(--fb); font-size: .84rem; font-weight: 500; cursor: pointer; transition: all .2s; white-space: nowrap; }
+        .tab.active { background: var(--s3); color: var(--text); }
 
         /* ── KPI BAR ── */
-        .kpi-bar {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
-            gap: 12px; margin-bottom: 24px; animation: fu .4s .15s ease both;
-        }
-        .kc {
-            background: var(--surface); border: 1.5px solid var(--border);
-            border-radius: var(--r); padding: 16px 18px;
-            position: relative; overflow: hidden;
-            transition: transform .2s, box-shadow .2s; cursor: default;
-        }
-        .kc:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255,107,26,0.08); }
-        .kc::after { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; border-radius: var(--r) var(--r) 0 0; }
-        .kc.g::after { background: var(--green); }
+        .kpi-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px,1fr)); gap: 12px; margin-bottom: 24px; animation: fu .4s .15s ease both; }
+        .kc { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; position: relative; overflow: hidden; transition: transform .2s; cursor: default; }
+        .kc:hover { transform: translateY(-2px); }
+        .kc::after { content: ''; position: absolute; inset: 0 0 auto 0; height: 2px; }
+        .kc.g::after { background: var(--accent); }
         .kc.b::after { background: var(--blue); }
-        .kc.y::after { background: var(--amber); }
-        .kc.r::after { background: var(--red); }
-        .kc.c::after { background: var(--teal); }
-        .kc.o::after { background: var(--orange); }
-        .kl { font-size: .7rem; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+        .kc.y::after { background: var(--warn); }
+        .kc.r::after { background: var(--danger); }
+        .kc.c::after { background: var(--accent2); }
+        .kl { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
         .kv { font-family: var(--fh); font-size: 1.55rem; font-weight: 700; line-height: 1; }
-        .kc.g .kv { color: var(--green); }
+        .kc.g .kv { color: var(--accent); }
         .kc.b .kv { color: var(--blue); }
-        .kc.y .kv { color: var(--amber); }
-        .kc.r .kv { color: var(--red); }
-        .kc.c .kv { color: var(--teal); }
-        .kc.o .kv { color: var(--orange); }
-        .ks { font-size: .7rem; color: var(--text2); margin-top: 3px; }
+        .kc.y .kv { color: var(--warn); }
+        .kc.r .kv { color: var(--danger); }
+        .kc.c .kv { color: var(--accent2); }
+        .ks { font-size: .7rem; color: var(--muted); margin-top: 3px; }
 
         /* ── CARD ── */
-        .card {
-            background: var(--surface); border: 1.5px solid var(--border);
-            border-radius: var(--r); padding: 22px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-            animation: fu .4s ease both;
-        }
+        .card { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 22px; box-shadow: var(--sh); animation: fu .4s ease both; }
         .card + .card { margin-top: 16px; }
-        .ch {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
-        }
-        .ct {
-            font-family: var(--fh); font-size: .95rem; font-weight: 700;
-            display: flex; align-items: center; gap: 8px; color: var(--text1);
-        }
-        .ct .ic {
-            width: 30px; height: 30px; border-radius: 8px;
-            display: grid; place-items: center; font-size: 15px;
-            background: var(--orange-lt); border: 1px solid var(--border2);
-        }
-        .cbadge {
-            font-size: .68rem; font-weight: 600; padding: 3px 9px;
-            border-radius: 20px; background: var(--surface2);
-            color: var(--text2); border: 1px solid var(--border);
-        }
+        .ch { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+        .ct { font-family: var(--fh); font-size: .95rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .ct .ic { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 15px; background: var(--s3); }
+        .cbadge { font-size: .68rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; background: var(--s3); color: var(--muted); }
 
-        /* ── GRID ── */
+        /* ── GRID LAYOUT ── */
         .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
 
-        /* ── SECTIONS ── */
+        /* ── SECTION ── */
         .sec { display: none; }
         .sec.active { display: block; }
 
         /* ── TABLES ── */
         .tbl-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; }
-        thead tr { border-bottom: 1.5px solid var(--border); }
-        th {
-            text-align: left; font-size: .7rem; font-weight: 700;
-            color: var(--text2); text-transform: uppercase;
-            letter-spacing: .06em; padding: 8px 12px 12px; white-space: nowrap;
-        }
-        tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
-        tbody tr:hover { background: var(--surface2); }
+        thead tr { border-bottom: 1px solid var(--border); }
+        th { text-align: left; font-size: .7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 8px 12px 12px; white-space: nowrap; }
+        tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background .15s; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
         tbody tr:last-child { border: none; }
-        td { padding: 11px 12px; font-size: .84rem; vertical-align: middle; color: var(--text1); }
+        td { padding: 11px 12px; font-size: .84rem; vertical-align: middle; }
 
         /* ── BADGES ── */
-        .bdg {
-            display: inline-flex; align-items: center; gap: 5px;
-            font-size: .68rem; font-weight: 700; padding: 3px 9px; border-radius: 20px;
-        }
-        .bdg.g { background: var(--green-bg); color: var(--green); border: 1px solid rgba(46,125,50,.2); }
-        .bdg.r { background: var(--red-bg);   color: var(--red);   border: 1px solid rgba(163,45,45,.2); }
-        .bdg.y { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(186,117,23,.2); }
-        .bdg.b { background: var(--blue-bg);  color: var(--blue);  border: 1px solid rgba(24,95,165,.2); }
-        .bdg.c { background: var(--teal-bg);  color: var(--teal);  border: 1px solid rgba(15,110,86,.2); }
-        .bdg.o { background: var(--orange-lt);color: var(--orange-dk); border: 1px solid var(--border2); }
+        .bdg { display: inline-flex; align-items: center; gap: 5px; font-size: .68rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+        .bdg.g  { background: rgba(74,222,128,.12); color: var(--accent);  border: 1px solid rgba(74,222,128,.2); }
+        .bdg.r  { background: rgba(248,113,113,.12); color: var(--danger); border: 1px solid rgba(248,113,113,.2); }
+        .bdg.y  { background: rgba(251,191,36,.12);  color: var(--warn);   border: 1px solid rgba(251,191,36,.2); }
+        .bdg.b  { background: rgba(96,165,250,.12);  color: var(--blue);   border: 1px solid rgba(96,165,250,.2); }
+        .bdg.c  { background: rgba(34,211,238,.12);  color: var(--accent2);border: 1px solid rgba(34,211,238,.2); }
 
         /* ── FORMULAIRES ── */
         .fg { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
         @media (max-width: 600px) { .fg { grid-template-columns: 1fr; } }
         .ff { display: flex; flex-direction: column; gap: 6px; }
         .ff.full { grid-column: 1/-1; }
-        .ff label { font-size: .74rem; font-weight: 600; color: var(--text2); letter-spacing: .06em; text-transform: uppercase; }
+        .ff label { font-size: .74rem; font-weight: 500; color: var(--muted); letter-spacing: .03em; }
         .ff input, .ff select, .ff textarea {
-            background: var(--surface2); border: 1.5px solid var(--border);
-            border-radius: 9px; color: var(--text1); font-family: var(--fb);
-            font-size: .88rem; padding: 10px 13px; outline: none;
-            transition: border-color .2s, box-shadow .2s;
+            background: var(--s2); border: 1px solid var(--border); border-radius: 9px;
+            color: var(--text); font-family: var(--fb); font-size: .88rem;
+            padding: 10px 13px; outline: none; transition: border-color .2s, box-shadow .2s;
         }
         .ff input:focus, .ff select:focus, .ff textarea:focus {
-            border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,107,26,.10);
-            background: var(--surface);
+            border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,222,128,.1);
         }
-        .ff select option { background: var(--surface); color: var(--text1); }
+        .ff select option { background: var(--s2); }
         .ff textarea { resize: vertical; min-height: 70px; }
 
         /* ── BOUTONS ── */
         .btn-g {
-            background: var(--orange); border: none; border-radius: 9px;
-            color: #fff; font-family: var(--fh); font-size: .88rem; font-weight: 700;
-            padding: 11px 22px; cursor: pointer; transition: background .2s, transform .15s;
+            background: linear-gradient(135deg, var(--accent), #22c55e);
+            border: none; border-radius: 9px; color: #0a0f0d;
+            font-family: var(--fh); font-size: .88rem; font-weight: 700;
+            padding: 11px 22px; cursor: pointer; transition: opacity .2s, transform .15s;
             display: inline-flex; align-items: center; gap: 7px;
         }
-        .btn-g:hover { background: var(--orange-dk); transform: translateY(-1px); }
-        .btn-g:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+        .btn-g:hover { opacity: .9; transform: translateY(-1px); }
+        .btn-g:disabled { opacity: .4; cursor: not-allowed; transform: none; }
         .btn-b {
-            background: var(--blue-bg); border: 1.5px solid rgba(24,95,165,.25);
-            border-radius: 9px; color: var(--blue); font-family: var(--fb);
-            font-size: .84rem; padding: 8px 16px; cursor: pointer; transition: all .2s;
+            background: rgba(96,165,250,.1); border: 1px solid rgba(96,165,250,.3);
+            border-radius: 9px; color: var(--blue); font-family: var(--fb); font-size: .84rem;
+            padding: 9px 16px; cursor: pointer; transition: all .2s;
         }
-        .btn-b:hover { background: rgba(24,95,165,.15); }
-        .btn-ref {
-            background: var(--surface); border: 1.5px solid var(--border);
-            border-radius: 8px; color: var(--text2); font-size: .75rem;
-            font-family: var(--fb); padding: 5px 12px; cursor: pointer;
-            transition: all .2s; display: flex; align-items: center; gap: 5px;
-        }
-        .btn-ref:hover { border-color: var(--orange); color: var(--orange); }
+        .btn-b:hover { background: rgba(96,165,250,.18); }
 
-        /* ── MESSAGES ── */
-        .msg { display: none; margin-top: 14px; padding: 11px 14px; border-radius: 10px; font-size: .82rem; font-weight: 500; align-items: center; gap: 8px; }
-        .msg.ok  { display: flex; background: var(--green-bg); color: var(--green); border: 1.5px solid rgba(46,125,50,.2); }
-        .msg.err { display: flex; background: var(--red-bg);   color: var(--red);   border: 1.5px solid rgba(163,45,45,.2); }
+        /* ── MSG ── */
+        .msg { display: none; margin-top: 14px; padding: 11px 14px; border-radius: 9px; font-size: .82rem; font-weight: 500; align-items: center; gap: 8px; }
+        .msg.ok  { display: flex; background: rgba(74,222,128,.1);  color: var(--accent); border: 1px solid rgba(74,222,128,.2); }
+        .msg.err { display: flex; background: rgba(248,113,113,.1); color: var(--danger); border: 1px solid rgba(248,113,113,.2); }
 
         /* ── ÉTATS VIDES ── */
-        .empty { padding: 32px; text-align: center; color: var(--text2); font-size: .84rem; }
-        .spinner {
-            display: inline-block; width: 16px; height: 16px;
-            border: 2px solid var(--border); border-top-color: var(--orange);
-            border-radius: 50%; animation: spin .7s linear infinite;
-            margin-right: 7px; vertical-align: middle;
-        }
+        .empty { padding: 32px; text-align: center; color: var(--muted); font-size: .84rem; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 7px; vertical-align: middle; }
 
-        /* ── VALEURS ── */
-        .pos { color: var(--green); font-weight: 600; }
-        .neg { color: var(--red);   font-weight: 600; }
+        /* ── MARGE COLOR ── */
+        .pos { color: var(--accent); font-weight: 600; }
+        .neg { color: var(--danger); font-weight: 600; }
 
         /* ── CHART ── */
         .chart-wrap { height: 240px; position: relative; }
 
-        /* ── APERÇU ── */
-        .apercu-box {
-            display: none; background: var(--surface2);
-            border: 1.5px solid var(--border2); border-radius: 10px;
-            padding: 14px 16px; margin-bottom: 16px; font-size: .84rem;
-        }
-        .apercu-box .ap-label {
-            font-size: .7rem; color: var(--text2);
-            text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px;
-        }
-        .apercu-box .ap-items { display: flex; gap: 24px; flex-wrap: wrap; }
-
-        /* ── STOCK DISPO ── */
-        .stock-dispo-box {
-            display: none; background: var(--green-bg);
-            border: 1.5px solid rgba(46,125,50,.2); border-radius: 10px;
-            padding: 12px 16px; margin-bottom: 16px; font-size: .84rem; color: var(--green);
-        }
-
-        /* ── ALERTES ── */
-        .alerte-row {
-            display: flex; align-items: center; gap: 12px;
-            background: var(--surface2); border: 1.5px solid var(--border);
-            border-radius: 10px; padding: 11px 14px; margin-bottom: 8px;
-            transition: border-color .15s;
-        }
-        .alerte-row:hover { border-color: var(--border2); }
+        /* ── ALERTE ROW ── */
+        .alerte-row { display: flex; align-items: center; gap: 12px; background: var(--s2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; margin-bottom: 8px; }
         .adot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-        .adot.r { background: var(--red); }
-        .adot.y { background: var(--amber); }
-        .adot.o { background: var(--orange); }
-
-        /* ── TRANSFERT ITEM ── */
-        .transfert-item {
-            display: flex; align-items: center; gap: 12px;
-            background: var(--surface2); border: 1.5px solid var(--border);
-            border-radius: 9px; padding: 10px 14px; margin-bottom: 8px;
-        }
-
-        /* ── EMPLOYÉ CARD ── */
-        .employe-card {
-            background: var(--surface2); border: 1.5px solid var(--border);
-            border-radius: 10px; padding: 14px 18px; margin-bottom: 10px;
-            display: flex; align-items: center; gap: 14px;
-            transition: border-color .15s;
-        }
-        .employe-card:hover { border-color: var(--border2); }
-        .emp-avatar {
-            width: 36px; height: 36px; border-radius: 50%;
-            background: var(--orange); display: grid; place-items: center;
-            font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
-        }
-
-        /* ── SELECT filtre ── */
-        .filtre-select {
-            background: var(--surface2); border: 1.5px solid var(--border);
-            border-radius: 8px; color: var(--text1); font-family: var(--fb);
-            font-size: .8rem; padding: 6px 10px; outline: none;
-            cursor: pointer; transition: border-color .2s;
-        }
-        .filtre-select:focus { border-color: var(--orange); }
+        .adot.r { background: var(--danger); box-shadow: 0 0 7px var(--danger); }
+        .adot.y { background: var(--warn);   box-shadow: 0 0 7px var(--warn); }
+        .adot.o { background: #fb923c;       box-shadow: 0 0 7px #fb923c; }
 
         @keyframes fd  { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: none; } }
         @keyframes fu  { from { opacity:0; transform: translateY(14px);  } to { opacity:1; transform: none; } }
@@ -364,9 +203,9 @@
         <button class="tab active" onclick="switchTab('stock',this)">🧊 Chambre froide</button>
         <button class="tab" onclick="switchTab('entree',this)">📦 Nouvelle entrée</button>
         <button class="tab" onclick="switchTab('sortie',this)">🚚 Sortie / Transfert</button>
+        <button class="tab" onclick="switchTab('stock-employes',this)">👷 Stock employés</button>
         <button class="tab" onclick="switchTab('mouvements',this)">📋 Historique</button>
         <button class="tab" onclick="switchTab('marge',this)">💹 Marge bénéficiaire</button>
-        <button class="tab" onclick="switchTab('employes',this)">👷 Employés</button>
     </div>
 
     <!-- KPI BAR -->
@@ -374,16 +213,16 @@
         <div class="kc g"><div class="kl">Stock total</div><div class="kv" id="kpi-stock">–</div><div class="ks">kg en chambre froide</div></div>
         <div class="kc b"><div class="kl">Valeur achats</div><div class="kv" id="kpi-achats">–</div><div class="ks">FCFA investis</div></div>
         <div class="kc c"><div class="kl">Chiffre sorties</div><div class="kv" id="kpi-sorties">–</div><div class="ks">FCFA transférés</div></div>
-        <div class="kc o"><div class="kl">Marge brute</div><div class="kv" id="kpi-marge">–</div><div class="ks">FCFA bénéfice</div></div>
+        <div class="kc g"><div class="kl">Marge brute</div><div class="kv" id="kpi-marge">–</div><div class="ks">FCFA bénéfice</div></div>
         <div class="kc r"><div class="kl">Alertes</div><div class="kv" id="kpi-alertes">–</div><div class="ks">expirations proches</div></div>
     </div>
 
-    <!-- ══ STOCK CHAMBRE FROIDE ══ -->
+    <!-- ══════════════ STOCK CHAMBRE FROIDE ══════════════ -->
     <div class="sec active" id="tab-stock">
         <div class="card">
             <div class="ch">
                 <div class="ct"><div class="ic">🧊</div>Stock chambre froide</div>
-                <button class="btn-ref" onclick="loadAll()">↻ Actualiser</button>
+                <button class="btn-b" onclick="loadAll()">↻ Actualiser</button>
             </div>
             <div class="tbl-wrap">
                 <table>
@@ -392,14 +231,13 @@
                         <th>Prix achat/kg</th><th>Prix vente/kg</th>
                         <th>Expiration</th><th>Statut</th>
                     </tr></thead>
-                    <tbody id="tbl-stock">
-                        <tr><td colspan="7" class="empty"><span class="spinner"></span>Chargement…</td></tr>
-                    </tbody>
+                    <tbody id="tbl-stock"><tr><td colspan="7" class="empty"><span class="spinner"></span>Chargement…</td></tr></tbody>
                 </table>
             </div>
         </div>
 
-        <div class="card" style="margin-top:16px">
+        <!-- Alertes expiration -->
+        <div class="card" style="margin-top:16px;">
             <div class="ch">
                 <div class="ct"><div class="ic">⚠️</div>Alertes expiration</div>
                 <span class="cbadge" id="badge-alertes">…</span>
@@ -408,7 +246,7 @@
         </div>
     </div>
 
-    <!-- ══ NOUVELLE ENTRÉE ══ -->
+    <!-- ══════════════ NOUVELLE ENTRÉE ══════════════ -->
     <div class="sec" id="tab-entree">
         <div class="card">
             <div class="ch"><div class="ct"><div class="ic">📦</div>Enregistrer une entrée (nouvel achat)</div></div>
@@ -431,12 +269,13 @@
                 </div>
             </div>
 
-            <div class="apercu-box" id="apercu-entree">
-                <div class="ap-label">Aperçu de l'entrée</div>
-                <div class="ap-items">
-                    <span>Quantité : <strong id="ap-qty" style="color:var(--orange)">–</strong></span>
-                    <span>Coût total : <strong id="ap-cout" style="color:var(--amber)">–</strong></span>
-                    <span>Marge estimée : <strong id="ap-marge">–</strong></span>
+            <!-- Aperçu coût total -->
+            <div id="apercu-entree" style="display:none;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:.84rem;">
+                <div style="color:var(--muted);margin-bottom:6px;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;">Aperçu de l'entrée</div>
+                <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                    <span>Quantité : <strong id="ap-qty" style="color:var(--accent)">–</strong></span>
+                    <span>Coût total : <strong id="ap-cout" style="color:var(--warn)">–</strong></span>
+                    <span>Marge estimée : <strong id="ap-marge" style="color:var(--accent2)">–</strong></span>
                 </div>
             </div>
 
@@ -445,7 +284,7 @@
         </div>
     </div>
 
-    <!-- ══ SORTIE / TRANSFERT ══ -->
+    <!-- ══════════════ SORTIE / TRANSFERT ══════════════ -->
     <div class="sec" id="tab-sortie">
         <div class="card">
             <div class="ch"><div class="ct"><div class="ic">🚚</div>Transfert vers employé</div></div>
@@ -468,30 +307,34 @@
                 </div>
             </div>
 
-            <div class="stock-dispo-box" id="stock-dispo">
-                Stock disponible : <strong id="dispo-val">–</strong> kg
+            <!-- Stock dispo -->
+            <div id="stock-dispo" style="display:none;background:var(--s2);border:1px solid rgba(74,222,128,.15);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.84rem;">
+                Stock disponible : <strong id="dispo-val" style="color:var(--accent)">–</strong> kg
             </div>
 
             <button class="btn-g" id="btn-sortie" onclick="enregistrerSortie()">🚚 Confirmer le transfert</button>
             <div class="msg" id="msg-sortie"></div>
         </div>
 
-        <div class="card" style="margin-top:16px">
+        <!-- Derniers transferts du jour -->
+        <div class="card" style="margin-top:16px;">
             <div class="ch"><div class="ct"><div class="ic">📋</div>Transferts d'aujourd'hui</div></div>
             <div id="transferts-jour"><div class="empty"><span class="spinner"></span>Chargement…</div></div>
         </div>
     </div>
 
-    <!-- ══ HISTORIQUE ══ -->
+    <!-- ══════════════ HISTORIQUE MOUVEMENTS ══════════════ -->
     <div class="sec" id="tab-mouvements">
         <div class="card">
             <div class="ch">
                 <div class="ct"><div class="ic">📋</div>Historique des mouvements</div>
-                <select id="filtre-type" class="filtre-select" onchange="filtrerMvt()">
-                    <option value="">Tous les types</option>
-                    <option value="entree">Entrées</option>
-                    <option value="sortie">Sorties</option>
-                </select>
+                <div style="display:flex;gap:8px;">
+                    <select id="filtre-type" onchange="filtrerMvt()" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--fb);font-size:.8rem;padding:6px 10px;outline:none;">
+                        <option value="">Tous les types</option>
+                        <option value="entree">Entrées</option>
+                        <option value="sortie">Sorties</option>
+                    </select>
+                </div>
             </div>
             <div class="tbl-wrap">
                 <table>
@@ -499,15 +342,13 @@
                         <th>Date</th><th>Type</th><th>Produit</th>
                         <th>Quantité</th><th>Détail</th><th>Par</th>
                     </tr></thead>
-                    <tbody id="tbl-mvt">
-                        <tr><td colspan="6" class="empty"><span class="spinner"></span>Chargement…</td></tr>
-                    </tbody>
+                    <tbody id="tbl-mvt"><tr><td colspan="6" class="empty"><span class="spinner"></span>Chargement…</td></tr></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ══ MARGE ══ -->
+    <!-- ══════════════ MARGE BÉNÉFICIAIRE ══════════════ -->
     <div class="sec" id="tab-marge">
         <div class="grid2">
             <div class="card">
@@ -518,9 +359,7 @@
                             <th>Produit</th><th>Achat/kg</th><th>Vente/kg</th>
                             <th>Kg sortis</th><th>Coût achat</th><th>Revenu</th><th>Marge</th><th>%</th>
                         </tr></thead>
-                        <tbody id="tbl-marge">
-                            <tr><td colspan="8" class="empty"><span class="spinner"></span>Chargement…</td></tr>
-                        </tbody>
+                        <tbody id="tbl-marge"><tr><td colspan="8" class="empty"><span class="spinner"></span>Chargement…</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -531,50 +370,76 @@
         </div>
     </div>
 
-    <!-- ══ EMPLOYÉS ══ -->
+    <!-- ══════════════ EMPLOYÉS ══════════════ -->
     <div class="sec" id="tab-employes">
         <div class="card">
-            <div class="ch"><div class="ct"><div class="ic">👷</div>Stock reçu par employé</div></div>
+            <div class="ch">
+                <div class="ct"><div class="ic">👷</div>Stock congélateur par employé</div>
+            </div>
             <div id="zone-employes"><div class="empty"><span class="spinner"></span>Chargement…</div></div>
         </div>
     </div>
 
-</div>
+    <!-- ══════════════ STOCK EMPLOYÉS ══════════════ -->
+    <div class="sec" id="tab-stock-employes">
+
+        <!-- Sélecteur employé -->
+        <div class="card" style="margin-bottom:16px;">
+            <div class="ch">
+                <div class="ct"><div class="ic">👷</div>Sélectionner un employé</div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <select id="sel-employe-vue" onchange="chargerStockEmploye(this.value)"
+                    style="background:var(--s2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:var(--fb);font-size:.88rem;padding:10px 14px;outline:none;flex:1;min-width:200px;">
+                    <option value="">— Tous les employés —</option>
+                </select>
+                <button class="btn-b" onclick="chargerStockEmploye(document.getElementById('sel-employe-vue').value)">↻ Actualiser</button>
+            </div>
+        </div>
+
+        <!-- Stock de l'employé sélectionné -->
+        <div id="zone-stock-employe">
+            <div class="empty">Sélectionnez un employé pour voir son stock</div>
+        </div>
+
+    </div>
+
+</div><!-- /wrap -->
 
 <script src="js/auth.js"></script>
 <script>
 "use strict";
 
-// ── AUTH GUARD ─────────────────────────────────────────────
+// ══════════════════════════════════════
+// AUTH GUARD
+// ══════════════════════════════════════
 const session = Auth.requireAuth();
 if (session) {
     if (!["gerant","admin"].includes(session.role)) window.location.href = "index.html";
-    const ini = (session.nom||session.email||"G").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
-    document.getElementById("uav").textContent   = ini;
+    const initiales = (session.nom||session.email||"G").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
+    document.getElementById("uav").textContent  = initiales;
     document.getElementById("uname").textContent = session.nom || session.email;
 }
 
-// ── STATE ──────────────────────────────────────────────────
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
 let STATE = { stock: [], employes: [], mouvements: [], totaux: {} };
 let chartMargeInstance = null;
 
-// ── UTILS ──────────────────────────────────────────────────
+// ══════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════
 const fmt  = n => Number(n||0).toLocaleString("fr-FR");
 const fmtF = n => fmt(n) + " FCFA";
-const fmtD = iso => iso
-    ? new Date(iso).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})
-    : "–";
+const fmtD = iso => iso ? new Date(iso).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}) : "–";
 const esc  = s => String(s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today = () => new Date().toISOString().split("T")[0];
 
 async function apiFetch(endpoint, opts={}) {
     const res = await fetch(`/.netlify/functions/${endpoint}`, {
         ...opts,
-        headers: {
-            "Content-Type": "application/json",
-            ...Auth.getAuthHeader(),
-            ...(opts.headers||{})
-        }
+        headers: { "Content-Type":"application/json", ...Auth.getAuthHeader(), ...(opts.headers||{}) }
     });
     const text = await res.text();
     let data;
@@ -590,13 +455,15 @@ function showMsg(id, type, text) {
 }
 
 function switchTab(name, btn) {
-    document.querySelectorAll(".sec").forEach(s => s.classList.remove("active"));
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.getElementById("tab-" + name).classList.add("active");
+    document.querySelectorAll(".sec").forEach(s=>s.classList.remove("active"));
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    document.getElementById("tab-"+name).classList.add("active");
     btn.classList.add("active");
 }
 
-// ── CHARGEMENT ─────────────────────────────────────────────
+// ══════════════════════════════════════
+// CHARGEMENT PRINCIPAL
+// ══════════════════════════════════════
 async function loadAll() {
     try {
         const data = await apiFetch("gerant-stats");
@@ -613,12 +480,15 @@ async function loadAll() {
         renderEmployes(data.stock_employes || [], data.employes);
         renderTransfertsJour(data.mouvements);
         populateSelects(data.stock, data.employes);
+
     } catch(err) {
         console.error("[loadAll]", err);
     }
 }
 
-// ── KPIs ───────────────────────────────────────────────────
+// ══════════════════════════════════════
+// KPIs
+// ══════════════════════════════════════
 function updateKPIs(t, stock) {
     const totalKg = stock.reduce((s,p) => s + Number(p.quantite||0), 0);
     document.getElementById("kpi-stock").textContent   = fmt(totalKg) + " kg";
@@ -628,13 +498,13 @@ function updateKPIs(t, stock) {
     document.getElementById("kpi-alertes").textContent = t.nb_alertes || 0;
 }
 
-// ── STOCK ──────────────────────────────────────────────────
+// ══════════════════════════════════════
+// STOCK CHAMBRE FROIDE
+// ══════════════════════════════════════
 function renderStock(stock) {
     const tbody = document.getElementById("tbl-stock");
-    if (!stock.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty">Aucun produit</td></tr>`;
-        return;
-    }
+    if (!stock.length) { tbody.innerHTML = `<tr><td colspan="7" class="empty">Aucun produit</td></tr>`; return; }
+
     const today0 = new Date(); today0.setHours(0,0,0,0);
 
     tbody.innerHTML = stock.map(p => {
@@ -644,70 +514,69 @@ function renderStock(stock) {
         const diff = exp ? (exp - today0) / 86400000 : null;
 
         let statut = `<span class="bdg g">✓ OK</span>`;
-        if (qty < 5)                          statut = `<span class="bdg y">⚠ Stock bas</span>`;
-        if (qty === 0)                         statut = `<span class="bdg r">✗ Épuisé</span>`;
-        if (diff !== null && diff < 0)         statut = `<span class="bdg r">✗ Expiré</span>`;
-        if (diff !== null && diff >= 0 && diff <= 1) statut = `<span class="bdg y">⚠ Expire bientôt</span>`;
+        if (qty < 5)          statut = `<span class="bdg y">⚠ Stock bas</span>`;
+        if (qty === 0)         statut = `<span class="bdg r">✗ Épuisé</span>`;
+        if (diff !== null && diff < 0)  statut = `<span class="bdg r">✗ Expiré</span>`;
+        if (diff !== null && diff <= 1) statut = `<span class="bdg y">⚠ Expire bientôt</span>`;
 
         return `<tr>
             <td><strong>${esc(p.nom)}</strong></td>
-            <td style="color:var(--text2)">${esc(p.reference||"–")}</td>
-            <td><strong style="color:var(--green)">${fmt(qty)} kg</strong></td>
-            <td>${p.prix_achat_kg ? fmtF(p.prix_achat_kg) : '<span style="color:var(--text2)">–</span>'}</td>
-            <td>${p.prix_kg ? fmtF(p.prix_kg) : '<span style="color:var(--text2)">–</span>'}</td>
-            <td style="color:var(--text2)">${exp ? exp.toLocaleDateString("fr-FR") : '–'}</td>
+            <td style="color:var(--muted)">${esc(p.reference||"–")}</td>
+            <td><strong style="color:var(--accent)">${fmt(qty)} kg</strong></td>
+            <td>${p.prix_achat_kg ? fmtF(p.prix_achat_kg) : '<span style="color:var(--muted)">–</span>'}</td>
+            <td>${p.prix_kg ? fmtF(p.prix_kg) : '<span style="color:var(--muted)">–</span>'}</td>
+            <td>${exp ? exp.toLocaleDateString("fr-FR") : '<span style="color:var(--muted)">–</span>'}</td>
             <td>${statut}</td>
         </tr>`;
     }).join("");
 }
 
-// ── ALERTES ────────────────────────────────────────────────
+// ══════════════════════════════════════
+// ALERTES
+// ══════════════════════════════════════
 function renderAlertes(stock) {
-    const zone   = document.getElementById("zone-alertes");
+    const zone = document.getElementById("zone-alertes");
     const today0 = new Date(); today0.setHours(0,0,0,0);
 
-    const alertes = stock
-        .filter(p => {
-            if (!p.date_expiration) return false;
-            const d = new Date(p.date_expiration); d.setHours(0,0,0,0);
-            return (d - today0) / 86400000 <= 2;
-        })
-        .map(p => {
-            const d = new Date(p.date_expiration); d.setHours(0,0,0,0);
-            return { ...p, diff: (d - today0) / 86400000 };
-        })
-        .sort((a,b) => a.diff - b.diff);
+    const alertes = stock.filter(p => {
+        if (!p.date_expiration) return false;
+        const d = new Date(p.date_expiration); d.setHours(0,0,0,0);
+        return (d - today0) / 86400000 <= 2;
+    }).map(p => {
+        const d = new Date(p.date_expiration); d.setHours(0,0,0,0);
+        const diff = (d - today0) / 86400000;
+        return { ...p, diff };
+    }).sort((a,b) => a.diff - b.diff);
 
     document.getElementById("badge-alertes").textContent = alertes.length + " alerte(s)";
 
     if (!alertes.length) {
-        zone.innerHTML = `<div class="empty" style="color:var(--green)">✅ Aucune alerte d'expiration</div>`;
+        zone.innerHTML = `<div class="empty" style="color:var(--accent)">✅ Aucune alerte d'expiration</div>`;
         return;
     }
 
     zone.innerHTML = alertes.map(p => {
-        const cls   = p.diff < 0 ? "r" : p.diff < 1 ? "o" : "y";
+        const cls = p.diff < 0 ? "r" : p.diff < 1 ? "o" : "y";
         const label = p.diff < 0 ? "Expiré" : p.diff < 1 ? "Aujourd'hui" : "Demain";
         return `<div class="alerte-row">
             <div class="adot ${cls}"></div>
             <div style="flex:1">
-                <div style="font-weight:600;font-size:.88rem">${esc(p.nom)}</div>
-                <div style="font-size:.73rem;color:var(--text2)">Stock : ${fmt(p.quantite)} kg — Expire le ${new Date(p.date_expiration).toLocaleDateString("fr-FR")}</div>
+                <div style="font-weight:500;font-size:.88rem">${esc(p.nom)}</div>
+                <div style="font-size:.73rem;color:var(--muted)">Stock : ${fmt(p.quantite)} kg — Expire le ${new Date(p.date_expiration).toLocaleDateString("fr-FR")}</div>
             </div>
             <span class="bdg ${cls}">${label}</span>
         </div>`;
     }).join("");
 }
 
-// ── HISTORIQUE ─────────────────────────────────────────────
+// ══════════════════════════════════════
+// HISTORIQUE MOUVEMENTS
+// ══════════════════════════════════════
 function renderMouvements(mvts, filtre="") {
-    const tbody    = document.getElementById("tbl-mvt");
+    const tbody = document.getElementById("tbl-mvt");
     const filtered = filtre ? mvts.filter(m => m.type === filtre) : mvts;
 
-    if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="empty">Aucun mouvement</td></tr>`;
-        return;
-    }
+    if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty">Aucun mouvement</td></tr>`; return; }
 
     tbody.innerHTML = filtered.map(m => {
         const typeBdg = m.type === "entree"
@@ -715,47 +584,52 @@ function renderMouvements(mvts, filtre="") {
             : `<span class="bdg c">🚚 Sortie</span>`;
         const detail = m.type === "entree"
             ? (m.prix_achat_kg ? `Achat à ${fmtF(m.prix_achat_kg)}/kg` : "–")
-            : `→ ${esc(m.employe_nom||"–")}`;
+            : `→ ${esc(m.employe_nom || "–")}`;
         return `<tr>
-            <td style="color:var(--text2);font-size:.78rem">${fmtD(m.created_at)}</td>
+            <td style="color:var(--muted);font-size:.78rem">${fmtD(m.created_at)}</td>
             <td>${typeBdg}</td>
             <td><strong>${esc(m.produit_nom||"–")}</strong></td>
-            <td style="color:var(--green);font-weight:600">${fmt(m.quantite)} kg</td>
-            <td style="color:var(--text2);font-size:.8rem">${detail}</td>
-            <td style="color:var(--text2);font-size:.78rem">${esc(m.createur_nom||"–")}</td>
+            <td style="color:var(--accent);font-weight:600">${fmt(m.quantite)} kg</td>
+            <td style="color:var(--muted);font-size:.8rem">${detail}</td>
+            <td style="color:var(--muted);font-size:.78rem">${esc(m.createur_nom||"–")}</td>
         </tr>`;
     }).join("");
 }
 
 function filtrerMvt() {
-    renderMouvements(STATE.mouvements, document.getElementById("filtre-type").value);
+    const v = document.getElementById("filtre-type").value;
+    renderMouvements(STATE.mouvements, v);
 }
 
-// ── TRANSFERTS DU JOUR ────────────────────────────────────
+// ══════════════════════════════════════
+// TRANSFERTS DU JOUR
+// ══════════════════════════════════════
 function renderTransfertsJour(mvts) {
-    const zone    = document.getElementById("transferts-jour");
-    const t0      = today();
+    const zone = document.getElementById("transferts-jour");
+    const t0 = today();
     const sorties = mvts.filter(m => m.type === "sortie" && (m.created_at||"").startsWith(t0));
 
     if (!sorties.length) {
-        zone.innerHTML = `<div class="empty">Aucun transfert aujourd'hui</div>`;
+        zone.innerHTML = `<div class="empty" style="color:var(--muted)">Aucun transfert aujourd'hui</div>`;
         return;
     }
 
     zone.innerHTML = sorties.map(m => `
-        <div class="transfert-item">
+        <div style="display:flex;align-items:center;gap:12px;background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-bottom:8px;">
             <span style="font-size:1.1rem">🚚</span>
             <div style="flex:1">
-                <div style="font-size:.86rem;font-weight:600">${esc(m.produit_nom||"–")} → <span style="color:var(--teal)">${esc(m.employe_nom||"–")}</span></div>
-                <div style="font-size:.75rem;color:var(--text2)">${fmtD(m.created_at)}</div>
+                <div style="font-size:.86rem;font-weight:500">${esc(m.produit_nom||"–")} → <span style="color:var(--accent2)">${esc(m.employe_nom||"–")}</span></div>
+                <div style="font-size:.75rem;color:var(--muted)">${fmtD(m.created_at)}</div>
             </div>
-            <strong style="color:var(--green)">${fmt(m.quantite)} kg</strong>
+            <strong style="color:var(--accent)">${fmt(m.quantite)} kg</strong>
         </div>`).join("");
 }
 
-// ── MARGE ──────────────────────────────────────────────────
+// ══════════════════════════════════════
+// MARGE BÉNÉFICIAIRE
+// ══════════════════════════════════════
 function renderMarge(stock) {
-    const tbody   = document.getElementById("tbl-marge");
+    const tbody = document.getElementById("tbl-marge");
     const produits = stock.filter(p => p.total_sorties > 0 || p.total_entrees > 0);
 
     if (!produits.length) {
@@ -766,15 +640,17 @@ function renderMarge(stock) {
     tbody.innerHTML = produits.map(p => {
         const marge = Number(p.marge_brute||0);
         const taux  = p.taux_marge;
+        const margeClass = marge >= 0 ? "pos" : "neg";
+        const tauxClass  = (taux === null || taux >= 0) ? "pos" : "neg";
         return `<tr>
             <td><strong>${esc(p.nom)}</strong></td>
-            <td style="color:var(--text2)">${p.prix_achat_kg ? fmtF(p.prix_achat_kg) : "–"}</td>
-            <td style="color:var(--text2)">${p.prix_kg ? fmtF(p.prix_kg) : "–"}</td>
+            <td>${p.prix_achat_kg ? fmtF(p.prix_achat_kg) : "–"}</td>
+            <td>${p.prix_kg ? fmtF(p.prix_kg) : "–"}</td>
             <td>${fmt(p.total_sorties)} kg</td>
-            <td style="color:var(--amber)">${fmtF(p.cout_achat||0)}</td>
-            <td style="color:var(--teal)">${fmtF(p.revenu_sorties||0)}</td>
-            <td class="${marge>=0?'pos':'neg'}">${fmtF(marge)}</td>
-            <td class="${(taux===null||taux>=0)?'pos':'neg'}">${taux!==null?taux+"%":"–"}</td>
+            <td style="color:var(--warn)">${fmtF(p.cout_achat||0)}</td>
+            <td style="color:var(--accent2)">${fmtF(p.revenu_sorties||0)}</td>
+            <td class="${margeClass}">${fmtF(marge)}</td>
+            <td class="${tauxClass}">${taux !== null ? taux+"%" : "–"}</td>
         </tr>`;
     }).join("");
 
@@ -785,97 +661,229 @@ function renderChartMarge(produits) {
     const ctx = document.getElementById("chartMarge");
     if (chartMargeInstance) { chartMargeInstance.destroy(); chartMargeInstance = null; }
 
+    const labels = produits.map(p => p.nom);
+    const achats = produits.map(p => Math.round(p.cout_achat||0));
+    const revenu = produits.map(p => Math.round(p.revenu_sorties||0));
+
     chartMargeInstance = new Chart(ctx, {
         type: "bar",
         data: {
-            labels: produits.map(p => p.nom),
+            labels,
             datasets: [
-                {
-                    label: "Coût achat",
-                    data: produits.map(p => Math.round(p.cout_achat||0)),
-                    backgroundColor: "rgba(186,117,23,0.65)",
-                    borderRadius: 5
-                },
-                {
-                    label: "Revenu sorties",
-                    data: produits.map(p => Math.round(p.revenu_sorties||0)),
-                    backgroundColor: "rgba(255,107,26,0.70)",
-                    borderRadius: 5
-                }
+                { label: "Coût achat", data: achats, backgroundColor: "rgba(251,191,36,0.7)", borderRadius: 5 },
+                { label: "Revenu sorties", data: revenu, backgroundColor: "rgba(74,222,128,0.7)", borderRadius: 5 }
             ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
             animation: { duration: 500 },
             plugins: {
-                legend: { labels: { color: "#888880", font: { size: 11 } } },
+                legend: { labels: { color: "#6b8f71", font: { size: 11 } } },
                 tooltip: {
-                    backgroundColor: "#FFFBF5",
-                    titleColor: "#888880", bodyColor: "#1A1A1A",
-                    borderColor: "#E8E0D8", borderWidth: 1,
+                    backgroundColor: "#172010",
+                    titleColor: "#6b8f71", bodyColor: "#e8f5e9",
+                    borderColor: "rgba(255,255,255,0.07)", borderWidth: 1,
                     callbacks: { label: c => " " + fmtF(c.parsed.y) }
                 }
             },
             scales: {
-                x: {
-                    ticks: { color: "#888880", font: { size: 10 } },
-                    grid:  { color: "rgba(232,224,216,0.6)" }
-                },
-                y: {
-                    ticks: { color: "#888880", font: { size: 10 }, callback: v => (v/1000).toFixed(0)+"k" },
-                    grid:  { color: "rgba(232,224,216,0.6)" }
-                }
+                x: { ticks: { color: "#6b8f71", font: { size: 10 } }, grid: { color: "rgba(255,255,255,0.03)" } },
+                y: { ticks: { color: "#6b8f71", font: { size: 10 }, callback: v => (v/1000).toFixed(0)+"k" }, grid: { color: "rgba(255,255,255,0.04)" } }
             }
         }
     });
 }
 
-// ── EMPLOYÉS ───────────────────────────────────────────────
-function renderEmployes(stockEmployes, employes) {
+// ══════════════════════════════════════
+// EMPLOYÉS — stock congélateur + lien dashboard
+// ══════════════════════════════════════
+async function renderEmployes(stockEmployes, employes) {
     const zone = document.getElementById("zone-employes");
 
-    if (!stockEmployes.length) {
-        zone.innerHTML = `<div class="empty">Aucun transfert effectué pour le moment</div>`;
+    if (!employes.length) {
+        zone.innerHTML = `<div class="empty">Aucun employé actif trouvé</div>`;
         return;
     }
 
-    zone.innerHTML = stockEmployes.map(e => `
-        <div class="employe-card">
-            <div class="emp-avatar">${(e.nom||"E")[0].toUpperCase()}</div>
-            <div style="flex:1">
-                <div style="font-weight:600;margin-bottom:2px">${esc(e.nom)}</div>
-                <div style="font-size:.75rem;color:var(--text2)">Total reçu : <strong style="color:var(--teal)">${fmt(e.total_kg)} kg</strong></div>
-            </div>
-            <span class="bdg o">👷 Employé</span>
-        </div>`).join("");
+    // Pour chaque employé, charger son stock produits_employe
+    let html = "";
+    for (const emp of employes) {
+        // Récupérer le stock de l'employé
+        let produits = [];
+        try {
+            const d = await apiFetch(`produits-employe?employe_id=${emp.id}`);
+            produits = d.produits || [];
+        } catch(e) { /* silencieux */ }
+
+        const totalKg  = produits.reduce((s,p) => s + Number(p.quantite||0), 0);
+        const nbProduits = produits.length;
+        const initiales  = (emp.nom||"E").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
+
+        // Lignes produits
+        const lignesProduits = produits.length
+            ? produits.map(p => `
+                <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:.8rem;">
+                    <span style="color:var(--text)">${esc(p.nom)}</span>
+                    <span style="color:var(--accent);font-weight:600">${fmt(p.quantite)} kg</span>
+                </div>`).join("")
+            : `<div style="font-size:.78rem;color:var(--muted);padding:8px 0">Congélateur vide</div>`;
+
+        html += `
+            <div style="background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+                    <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:14px;font-weight:700;color:#0a0f0d;flex-shrink:0">
+                        ${initiales}
+                    </div>
+                    <div style="flex:1">
+                        <div style="font-weight:600;font-size:.9rem">${esc(emp.nom)}</div>
+                        <div style="font-size:.73rem;color:var(--muted)">${nbProduits} produit(s) — ${fmt(totalKg)} kg total</div>
+                    </div>
+                    <a href="index.html?vue_employe=${emp.id}"
+                       style="background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.25);border-radius:8px;color:var(--accent2);font-size:.75rem;font-weight:600;padding:7px 13px;text-decoration:none;white-space:nowrap;transition:all .2s;"
+                       onmouseover="this.style.background='rgba(34,211,238,.2)'"
+                       onmouseout="this.style.background='rgba(34,211,238,.1)'">
+                        👁️ Voir dashboard
+                    </a>
+                </div>
+                <div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:10px;">
+                    ${lignesProduits}
+                </div>
+            </div>`;
+    }
+
+    zone.innerHTML = html || `<div class="empty">Aucun transfert effectué pour le moment</div>`;
 }
 
-// ── SELECTS ────────────────────────────────────────────────
+// ══════════════════════════════════════
+// SELECTS DYNAMIQUES
+// ══════════════════════════════════════
 function populateSelects(stock, employes) {
+    // stock est maintenant produits_cf
     const opts = stock.map(p =>
-        `<option value="${p.id}" data-stock="${p.quantite}" data-prix="${p.prix_kg||0}" data-achat="${p.prix_achat_kg||0}">${esc(p.nom)} (${fmt(p.quantite)} kg)</option>`
+        `<option value="${p.id}" data-stock="${p.quantite}" data-prix="${p.prix_vente_kg||0}" data-achat="${p.prix_achat_kg||0}">${esc(p.nom)} (${fmt(p.quantite)} kg)</option>`
     ).join("");
 
     ["e-produit","s-produit"].forEach(id => {
-        document.getElementById(id).innerHTML =
-            `<option value="">— Sélectionner —</option>` + opts;
+        const el = document.getElementById(id);
+        el.innerHTML = `<option value="">— Sélectionner —</option>` + opts;
     });
 
+    const empOpts = employes.map(e =>
+        `<option value="${e.id}" data-nom="${esc(e.nom)}">${esc(e.nom)}</option>`
+    ).join("");
     document.getElementById("s-employe").innerHTML =
-        `<option value="">— Sélectionner —</option>` +
-        employes.map(e =>
-            `<option value="${e.id}" data-nom="${esc(e.nom)}">${esc(e.nom)}</option>`
-        ).join("");
+        `<option value="">— Sélectionner —</option>` + empOpts;
+
+    // Populer le sélecteur de la vue stock employé
+    const selVue = document.getElementById("sel-employe-vue");
+    if (selVue) {
+        selVue.innerHTML = `<option value="">— Tous les employés —</option>` +
+            employes.map(e => `<option value="${e.id}">${esc(e.nom)}</option>`).join("");
+    }
 }
 
-// ── APERÇU ENTRÉE ──────────────────────────────────────────
+// ══════════════════════════════════════
+// STOCK EMPLOYÉS (vue gérant)
+// ══════════════════════════════════════
+async function chargerStockEmploye(employeId) {
+    const zone = document.getElementById("zone-stock-employe");
+    zone.innerHTML = `<div class="empty"><span class="spinner"></span>Chargement…</div>`;
+
+    try {
+        let url = "produits-employe";
+        if (employeId) url += `?employe_id=${employeId}`;
+        const data = await apiFetch(url);
+        const stock = data.stock || [];
+
+        if (!stock.length) {
+            zone.innerHTML = `<div class="empty">Aucun stock pour cet employé.</div>`;
+            return;
+        }
+
+        if (employeId) {
+            // Vue d'un seul employé
+            zone.innerHTML = `
+                <div class="card">
+                    <div class="ch">
+                        <div class="ct"><div class="ic">🧊</div>Congélateur de ${esc(stock[0]?.employe_nom||"–")}</div>
+                        <span class="cbadge">${stock.length} produit(s)</span>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table>
+                            <thead><tr><th>Produit</th><th>Réf.</th><th>Quantité</th><th>Prix vente/kg</th><th>Statut</th></tr></thead>
+                            <tbody>${stock.map(p => `
+                                <tr>
+                                    <td><strong>${esc(p.produit_nom)}</strong></td>
+                                    <td style="color:var(--muted)">${esc(p.reference||"–")}</td>
+                                    <td><strong style="color:var(--accent)">${fmt(p.quantite)} kg</strong></td>
+                                    <td>${p.prix_vente_kg ? fmtF(p.prix_vente_kg) : "–"}</td>
+                                    <td>${badgeStatut(p.statut_expiration)}</td>
+                                </tr>`).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+        } else {
+            // Vue tous les employés groupée
+            const parEmploye = {};
+            stock.forEach(p => {
+                const id = p.employe_id;
+                if (!parEmploye[id]) parEmploye[id] = { nom: p.employe_nom, items: [] };
+                parEmploye[id].items.push(p);
+            });
+
+            zone.innerHTML = Object.values(parEmploye).map(emp => `
+                <div class="card" style="margin-bottom:14px;">
+                    <div class="ch">
+                        <div class="ct">
+                            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:13px;font-weight:700;color:#0a0f0d;">
+                                ${(emp.nom||"E")[0].toUpperCase()}
+                            </div>
+                            ${esc(emp.nom)}
+                        </div>
+                        <span class="cbadge">${fmt(emp.items.reduce((s,p)=>s+Number(p.quantite||0),0))} kg total</span>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table>
+                            <thead><tr><th>Produit</th><th>Quantité</th><th>Prix vente/kg</th><th>Statut</th></tr></thead>
+                            <tbody>${emp.items.map(p => `
+                                <tr>
+                                    <td><strong>${esc(p.produit_nom)}</strong></td>
+                                    <td style="color:var(--accent);font-weight:600">${fmt(p.quantite)} kg</td>
+                                    <td>${p.prix_vente_kg ? fmtF(p.prix_vente_kg) : "–"}</td>
+                                    <td>${badgeStatut(p.statut_expiration)}</td>
+                                </tr>`).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`).join("");
+        }
+
+    } catch(err) {
+        zone.innerHTML = `<div class="empty" style="color:var(--danger)">❌ ${err.message}</div>`;
+    }
+}
+
+function badgeStatut(statut) {
+    const map = {
+        expire:      `<span class="bdg r">✗ Expiré</span>`,
+        aujourd_hui: `<span class="bdg y">⚠ Aujourd'hui</span>`,
+        demain:      `<span class="bdg y">⚠ Demain</span>`,
+        ok:          `<span class="bdg g">✓ OK</span>`
+    };
+    return map[statut] || map.ok;
+}
+
+// ══════════════════════════════════════
+// APERÇU ENTRÉE
+// ══════════════════════════════════════
 document.addEventListener("change", e => {
     if (["e-produit","e-quantite","e-prix"].includes(e.target.id)) updateApercuEntree();
-    if (e.target.id === "s-produit") updateStockDispo();
 });
 document.addEventListener("input", e => {
     if (["e-quantite","e-prix"].includes(e.target.id)) updateApercuEntree();
-    if (e.target.id === "s-quantite") updateStockDispo();
+    if (e.target.id === "s-produit" || e.target.id === "s-quantite") updateStockDispo();
+    if (e.target.id === "s-produit") updateStockDispo();
 });
 
 function updateApercuEntree() {
@@ -883,19 +891,19 @@ function updateApercuEntree() {
     const prix  = Number(document.getElementById("e-prix").value||0);
     const selEl = document.getElementById("e-produit");
     const opt   = selEl.options[selEl.selectedIndex];
-    const prixV = opt ? Number(opt.dataset.prix||0) : 0;
-    const ap    = document.getElementById("apercu-entree");
+    const prixVente = opt ? Number(opt.dataset.prix||0) : 0;
 
+    const ap = document.getElementById("apercu-entree");
     if (!qty || !prix) { ap.style.display = "none"; return; }
 
-    const cout  = qty * prix;
-    const rev   = qty * prixV;
-    const marge = rev - cout;
+    const cout = qty * prix;
+    const revenu = qty * prixVente;
+    const marge = revenu - cout;
 
     document.getElementById("ap-qty").textContent   = fmt(qty) + " kg";
     document.getElementById("ap-cout").textContent  = fmtF(cout);
     document.getElementById("ap-marge").textContent = (marge >= 0 ? "+" : "") + fmtF(marge);
-    document.getElementById("ap-marge").style.color = marge >= 0 ? "var(--green)" : "var(--red)";
+    document.getElementById("ap-marge").style.color = marge >= 0 ? "var(--accent)" : "var(--danger)";
     ap.style.display = "block";
 }
 
@@ -908,83 +916,101 @@ function updateStockDispo() {
     zone.style.display = "block";
 }
 
-// ── ENTRÉE ─────────────────────────────────────────────────
+// ══════════════════════════════════════
+// ENREGISTRER ENTRÉE
+// ══════════════════════════════════════
 async function enregistrerEntree() {
-    const produit_id = document.getElementById("e-produit").value;
-    const quantite   = document.getElementById("e-quantite").value;
-    const prix_achat = document.getElementById("e-prix").value;
-    const note       = document.getElementById("e-note").value;
-    const btn        = document.getElementById("btn-entree");
+    const produit_id  = document.getElementById("e-produit").value;
+    const quantite    = document.getElementById("e-quantite").value;
+    const prix_achat  = document.getElementById("e-prix").value;
+    const note        = document.getElementById("e-note").value;
+    const btn         = document.getElementById("btn-entree");
 
     document.getElementById("msg-entree").className = "msg";
+
     if (!produit_id || !quantite) {
         showMsg("msg-entree","err","Sélectionnez un produit et saisissez la quantité.");
         return;
     }
 
-    btn.disabled = true; btn.textContent = "⏳ Enregistrement…";
+    btn.disabled = true;
+    btn.textContent = "⏳ Enregistrement…";
 
     try {
         await apiFetch("mouvements", {
             method: "POST",
-            body: JSON.stringify({
-                produit_id, type: "entree",
-                quantite: Number(quantite),
-                prix_achat_kg: prix_achat ? Number(prix_achat) : null,
-                note
-            })
+            body: JSON.stringify({ produit_id, type:"entree", quantite: Number(quantite),
+                prix_achat_kg: prix_achat ? Number(prix_achat) : null, note })
         });
+
         showMsg("msg-entree","ok","✅ Entrée enregistrée avec succès !");
         ["e-produit","e-quantite","e-prix","e-note"].forEach(id => document.getElementById(id).value = "");
         document.getElementById("apercu-entree").style.display = "none";
         await loadAll();
+
     } catch(err) {
         showMsg("msg-entree","err","❌ " + err.message);
     } finally {
-        btn.disabled = false; btn.textContent = "📦 Enregistrer l'entrée";
+        btn.disabled = false;
+        btn.textContent = "📦 Enregistrer l'entrée";
     }
 }
 
-// ── SORTIE ─────────────────────────────────────────────────
+// ══════════════════════════════════════
+// ENREGISTRER SORTIE
+// ══════════════════════════════════════
 async function enregistrerSortie() {
-    const produit_id  = document.getElementById("s-produit").value;
-    const empSel      = document.getElementById("s-employe");
-    const employe_id  = empSel.value;
-    const employe_nom = empSel.options[empSel.selectedIndex]?.dataset.nom || "";
-    const quantite    = document.getElementById("s-quantite").value;
-    const note        = document.getElementById("s-note").value;
-    const btn         = document.getElementById("btn-sortie");
+    const produit_id = document.getElementById("s-produit").value;
+    const empSel     = document.getElementById("s-employe");
+    const employe_id = empSel.value;
+    const employe_nom= empSel.options[empSel.selectedIndex]?.dataset.nom || "";
+    const quantite   = document.getElementById("s-quantite").value;
+    const note       = document.getElementById("s-note").value;
+    const btn        = document.getElementById("btn-sortie");
 
     document.getElementById("msg-sortie").className = "msg";
+
     if (!produit_id || !employe_id || !quantite) {
         showMsg("msg-sortie","err","Sélectionnez un produit, un employé et saisissez la quantité.");
         return;
     }
 
-    btn.disabled = true; btn.textContent = "⏳ Transfert en cours…";
+    btn.disabled = true;
+    btn.textContent = "⏳ Transfert en cours…";
 
     try {
         await apiFetch("mouvements", {
             method: "POST",
-            body: JSON.stringify({
-                produit_id, type: "sortie",
-                quantite: Number(quantite),
-                employe_id, employe_nom, note
-            })
+            body: JSON.stringify({ produit_id, type:"sortie", quantite: Number(quantite),
+                employe_id, employe_nom, note })
         });
+
         showMsg("msg-sortie","ok",`✅ ${quantite} kg transférés vers ${employe_nom} !`);
         ["s-produit","s-employe","s-quantite","s-note"].forEach(id => document.getElementById(id).value = "");
         document.getElementById("stock-dispo").style.display = "none";
         await loadAll();
+
     } catch(err) {
         showMsg("msg-sortie","err","❌ " + err.message);
     } finally {
-        btn.disabled = false; btn.textContent = "🚚 Confirmer le transfert";
+        btn.disabled = false;
+        btn.textContent = "🚚 Confirmer le transfert";
     }
 }
 
-// ── INIT ───────────────────────────────────────────────────
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
 loadAll();
+
+// Charger stock employés à l'ouverture de l'onglet
+document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (btn.textContent.includes('Stock employés')) {
+            chargerStockEmploye(document.getElementById('sel-employe-vue')?.value || '');
+        }
+    });
+});
 </script>
 </body>
 </html>

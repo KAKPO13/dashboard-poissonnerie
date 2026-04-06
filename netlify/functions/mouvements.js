@@ -1,9 +1,9 @@
 /**
  * Netlify Function : mouvements
- * Gère les entrées et sorties de stock
+ * Gère les mouvements de stock
  *
- * ENTRÉE  → ajoute au stock chambre froide (produits.quantite)
- * SORTIE  → retire du stock chambre froide ET ajoute au stock_employe
+ * ENTRÉE  → ajoute à produits_cf (chambre froide)
+ * SORTIE  → retire de produits_cf ET ajoute à produits_employe
  *
  * GET  → liste des mouvements
  * POST → enregistre un mouvement
@@ -27,23 +27,16 @@ async function verifierToken(event, URL, KEY) {
     const auth = (event.headers.authorization || event.headers.Authorization || "")
         .replace("Bearer ", "").trim();
     if (!auth) throw new Error("Token manquant");
-
-    const r = await fetch(`${URL}/auth/v1/user`, {
-        headers: { apikey: KEY, Authorization: `Bearer ${auth}` }
-    });
-    const u = await sbRead(r);
+    const r  = await fetch(`${URL}/auth/v1/user`, { headers: { apikey: KEY, Authorization: `Bearer ${auth}` } });
+    const u  = await sbRead(r);
     if (!r.ok || !u?.id) throw new Error("Token invalide");
-
-    const pr = await fetch(
-        `${URL}/rest/v1/utilisateurs?id=eq.${u.id}&select=role,nom,actif&limit=1`,
-        { headers: { apikey: KEY, Authorization: `Bearer ${auth}` } }
-    );
-    const p = await sbRead(pr);
+    const pr = await fetch(`${URL}/rest/v1/utilisateurs?id=eq.${u.id}&select=role,nom,actif&limit=1`,
+        { headers: { apikey: KEY, Authorization: `Bearer ${auth}` } });
+    const p  = await sbRead(pr);
     if (!Array.isArray(p) || !p[0]) throw new Error("Profil introuvable");
     if (!p[0].actif) throw new Error("Compte désactivé");
     if (!["gerant", "admin"].includes(p[0].role)) throw new Error("Accès réservé aux gérants");
-
-    return { userId: u.id, role: p[0].role, nom: p[0].nom, token: auth };
+    return { userId: u.id, role: p[0].role, nom: p[0].nom };
 }
 
 export async function handler(event) {
@@ -54,7 +47,6 @@ export async function handler(event) {
     const URL = process.env.SUPABASE_URL;
     const KEY = process.env.SUPABASE_KEY;
     const SVC = process.env.SUPABASE_SERVICE_KEY || KEY;
-
     if (!URL || !KEY) return json(500, { error: "Configuration manquante" });
 
     let user;
@@ -71,97 +63,93 @@ export async function handler(event) {
             let query = `${URL}/rest/v1/v_mouvements_detail?order=created_at.desc`;
             if (params.limit) query += `&limit=${parseInt(params.limit)}`;
             if (params.type)  query += `&type=eq.${params.type}`;
-
             const r = await fetch(query, { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } });
             const data = await sbRead(r);
-            return json(r.ok ? 200 : r.status, r.ok ? (data || []) : { error: data?.message || "Erreur" });
+            return json(r.ok ? 200 : 500, r.ok ? (data || []) : { error: "Erreur" });
         }
 
         // ════ POST : enregistrer un mouvement ════
         if (event.httpMethod === "POST") {
             let body;
-            try { body = JSON.parse(event.body || "{}"); }
-            catch { return json(400, { error: "Corps de requête invalide" }); }
+            try { body = JSON.parse(event.body || "{}"); } catch { return json(400, { error: "Corps invalide" }); }
 
             const { produit_id, type, quantite, prix_achat_kg, employe_id, employe_nom, note } = body;
 
             if (!produit_id) return json(400, { error: "produit_id requis" });
-            if (!type || !["entree", "sortie", "ajustement"].includes(type))
+            if (!["entree", "sortie", "ajustement"].includes(type))
                 return json(400, { error: "type requis : entree, sortie ou ajustement" });
             if (!quantite || Number(quantite) <= 0)
-                return json(400, { error: "quantite doit être > 0" });
+                return json(400, { error: "quantite > 0 requis" });
             if (type === "sortie" && !employe_id)
                 return json(400, { error: "employe_id requis pour une sortie" });
 
             const qty = Number(quantite);
 
-            // ── Lire le stock actuel chambre froide ──
-            const stockRes = await fetch(
-                `${URL}/rest/v1/produits?id=eq.${produit_id}&select=id,nom,quantite&limit=1`,
+            // ── Lire le produit dans produits_cf ──
+            const cfRes = await fetch(
+                `${URL}/rest/v1/produits_cf?id=eq.${produit_id}&select=id,nom,reference,quantite,prix_vente_kg&limit=1`,
                 { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } }
             );
-            const stocks = await sbRead(stockRes);
-            if (!Array.isArray(stocks) || !stocks[0])
-                return json(404, { error: "Produit introuvable" });
+            const cfRows = await sbRead(cfRes);
+            if (!Array.isArray(cfRows) || !cfRows[0])
+                return json(404, { error: "Produit chambre froide introuvable" });
 
-            const stockActuel = Number(stocks[0].quantite || 0);
+            const produitCF = cfRows[0];
+            const stockCF   = Number(produitCF.quantite || 0);
 
-            // ── Vérifier stock suffisant pour une sortie ──
-            if (type === "sortie" && stockActuel < qty) {
+            // ── Vérifier stock suffisant pour sortie ──
+            if (type === "sortie" && stockCF < qty) {
                 return json(400, {
-                    error: `Stock chambre froide insuffisant. Disponible : ${stockActuel} kg, demandé : ${qty} kg`
+                    error: `Stock chambre froide insuffisant. Disponible : ${stockCF} kg, demandé : ${qty} kg`
                 });
             }
 
             // ── 1. Insérer le mouvement ──
             const mvtData = {
-                produit_id:    Number(produit_id),
-                type,
-                quantite:      qty,
-                note:          note || null,
-                created_by:    user.userId,
+                produit_id:  Number(produit_id),
+                type, quantite: qty,
+                note: note || null,
+                created_by: user.userId,
             };
             if (type === "entree" && prix_achat_kg) mvtData.prix_achat_kg = Number(prix_achat_kg);
-            if (type === "sortie") {
-                mvtData.employe_id  = employe_id;
-                mvtData.employe_nom = employe_nom || null;
-            }
+            if (type === "sortie") { mvtData.employe_id = employe_id; mvtData.employe_nom = employe_nom || null; }
 
             const mvtRes = await fetch(`${URL}/rest/v1/mouvements_stock`, {
                 method: "POST",
-                headers: { ...h, Prefer: "return=representation" },
+                headers: { ...h, Prefer: "return=minimal" },
                 body: JSON.stringify(mvtData)
             });
-            const mvt = await sbRead(mvtRes);
-            if (!mvtRes.ok) return json(mvtRes.status, { error: mvt?.message || "Erreur insertion mouvement" });
+            if (!mvtRes.ok) {
+                const err = await sbRead(mvtRes);
+                return json(mvtRes.status, { error: err?.message || "Erreur insertion mouvement" });
+            }
 
-            // ── 2. Mettre à jour stock chambre froide (produits.quantite) ──
-            const delta = type === "entree" ? qty : -qty;
-            const newQtyCF = Math.max(0, stockActuel + delta);
-            const patchBody = { quantite: newQtyCF };
-            if (type === "entree" && prix_achat_kg) patchBody.prix_achat_kg = Number(prix_achat_kg);
+            // ── 2. Mettre à jour produits_cf (chambre froide) ──
+            const delta     = type === "entree" ? qty : -qty;
+            const newQtyCF  = Math.max(0, stockCF + delta);
+            const patchCF   = { quantite: newQtyCF, updated_at: new Date().toISOString() };
+            if (type === "entree" && prix_achat_kg) patchCF.prix_achat_kg = Number(prix_achat_kg);
 
-            await fetch(`${URL}/rest/v1/produits?id=eq.${produit_id}`, {
+            await fetch(`${URL}/rest/v1/produits_cf?id=eq.${produit_id}`, {
                 method: "PATCH",
                 headers: { ...h, Prefer: "return=minimal" },
-                body: JSON.stringify(patchBody)
+                body: JSON.stringify(patchCF)
             });
 
-            // ── 3. Si SORTIE → mettre à jour stock_employe ──
+            // ── 3. Si SORTIE → mettre à jour produits_employe ──
             if (type === "sortie") {
-
-                // Vérifier si une ligne existe déjà pour ce couple (employé, produit)
-                const seRes = await fetch(
-                    `${URL}/rest/v1/stock_employe?employe_id=eq.${employe_id}&produit_id=eq.${produit_id}&select=id,quantite&limit=1`,
+                // Chercher si une ligne existe déjà pour (employe, produit)
+                const peRes = await fetch(
+                    `${URL}/rest/v1/produits_employe?employe_id=eq.${employe_id}&produit_cf_id=eq.${produit_id}&select=id,quantite&limit=1`,
                     { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } }
                 );
-                const seRows = await sbRead(seRes);
+                const peRows = await sbRead(peRes);
 
-                if (Array.isArray(seRows) && seRows.length > 0) {
-                    // Ligne existante → incrémenter
-                    const newQtyEmp = Number(seRows[0].quantite || 0) + qty;
+                if (Array.isArray(peRows) && peRows.length > 0) {
+                    // Incrémenter le stock existant
+                    const newQtyEmp = Number(peRows[0].quantite || 0) + qty;
                     await fetch(
-                        `${URL}/rest/v1/stock_employe?employe_id=eq.${employe_id}&produit_id=eq.${produit_id}`,
+                        `${URL}/rest/v1/produits_employe?employe_id=eq.${employe_id}&produit_cf_id=eq.${produit_id}`,
                         {
                             method: "PATCH",
                             headers: { ...h, Prefer: "return=minimal" },
@@ -169,24 +157,28 @@ export async function handler(event) {
                         }
                     );
                 } else {
-                    // Nouvelle ligne → insérer
-                    await fetch(`${URL}/rest/v1/stock_employe`, {
+                    // Créer une nouvelle ligne dans produits_employe
+                    await fetch(`${URL}/rest/v1/produits_employe`, {
                         method: "POST",
                         headers: { ...h, Prefer: "return=minimal" },
                         body: JSON.stringify({
                             employe_id,
-                            produit_id: Number(produit_id),
-                            quantite:   qty,
-                            updated_at: new Date().toISOString()
+                            produit_cf_id: Number(produit_id),
+                            nom:           produitCF.nom,
+                            reference:     produitCF.reference || null,
+                            quantite:      qty,
+                            prix_vente_kg: produitCF.prix_vente_kg || null,
+                            updated_at:    new Date().toISOString()
                         })
                     });
                 }
             }
 
             return json(201, {
-                success:         true,
-                mouvement:       Array.isArray(mvt) ? mvt[0] : mvt,
-                stock_cf_restant: newQtyCF
+                success:          true,
+                stock_cf_restant: newQtyCF,
+                type,
+                quantite:         qty
             });
         }
 
@@ -197,4 +189,5 @@ export async function handler(event) {
         return json(500, { error: err.message });
     }
 }
+
 
