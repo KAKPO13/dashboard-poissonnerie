@@ -27,6 +27,8 @@
   --amber-bg:  #FAEEDA;
   --red:       #A32D2D;
   --red-bg:    #FCEBEB;
+  --teal:      #0F6E56;
+  --teal-bg:   #E1F5EE;
   --radius:    14px;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,7 +41,7 @@ body {
 }
 .wrapper { max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
 
-/* ── Header ─────────────────────────────────────────── */
+/* ── Header ── */
 header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 32px; padding-bottom: 20px;
@@ -84,7 +86,7 @@ header {
   padding: 3px 9px; border-radius: 20px;
 }
 .role-pill.admin   { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(186,117,23,0.25); }
-.role-pill.gerant  { background: var(--blue-bg);  color: var(--blue);  border: 1px solid rgba(24,95,165,0.25); }
+.role-pill.gerant  { background: var(--teal-bg);  color: var(--teal);  border: 1px solid rgba(15,110,86,0.25); }
 .role-pill.employe { background: var(--orange-lt);color: var(--orange);border: 1px solid var(--border2); }
 
 .btn-header {
@@ -96,10 +98,16 @@ header {
   cursor: pointer; transition: all 0.2s;
 }
 .btn-header:hover { border-color: var(--orange); color: var(--orange); }
-.btn-header.admin { border-color: rgba(186,117,23,0.3); color: var(--amber); }
-.btn-header.admin:hover { background: var(--amber-bg); }
 
-/* ── Banner ─────────────────────────────────────────── */
+/* Bouton Admin (ambre) */
+.btn-header.admin  { border-color: rgba(186,117,23,0.3); color: var(--amber); }
+.btn-header.admin:hover  { background: var(--amber-bg); }
+
+/* Bouton Gérant (teal) */
+.btn-header.gerant { border-color: rgba(15,110,86,0.3); color: var(--teal); }
+.btn-header.gerant:hover { background: var(--teal-bg); }
+
+/* ── Banner ── */
 .access-banner {
   background: var(--blue-bg);
   border: 1.5px solid rgba(24,95,165,0.2);
@@ -110,7 +118,7 @@ header {
 }
 .access-banner.visible { display: flex; }
 
-/* ── KPIs ───────────────────────────────────────────── */
+/* ── KPIs ── */
 .kpi-bar {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -156,7 +164,7 @@ header {
 .kpi-sub { font-size: 0.72rem; color: var(--text2); margin-top: 4px; }
 .kpi-card.locked { filter: blur(5px); pointer-events: none; opacity: 0.4; }
 
-/* ── Grid ───────────────────────────────────────────── */
+/* ── Grid ── */
 .grid {
   display: grid; gap: 20px;
   grid-template-columns: 1fr 1fr;
@@ -172,7 +180,7 @@ header {
   }
 }
 
-/* ── Cards ──────────────────────────────────────────── */
+/* ── Cards ── */
 .card {
   background: var(--surface);
   border: 1.5px solid var(--border);
@@ -192,7 +200,8 @@ header {
   position: absolute; inset: 0;
   display: grid; place-items: center;
   border-radius: var(--radius);
-  background: rgba(255,251,245,0.8);
+  background: rgba(255,251,245,0.85);
+  backdrop-filter: blur(3px);
   font-size: 0.82rem; color: var(--text2);
   text-align: center; padding: 20px;
   pointer-events: none; line-height: 1.6;
@@ -224,7 +233,7 @@ header {
 
 .chart-wrap { position: relative; height: 220px; }
 
-/* ── Lists ──────────────────────────────────────────── */
+/* ── Lists ── */
 .data-list {
   list-style: none; display: flex;
   flex-direction: column; gap: 8px;
@@ -251,7 +260,7 @@ header {
   color: var(--orange); white-space: nowrap;
 }
 
-/* ── Alerts ─────────────────────────────────────────── */
+/* ── Alerts ── */
 .alert-item {
   display: flex; align-items: center; gap: 12px;
   background: var(--surface2);
@@ -275,7 +284,7 @@ header {
 .alert-badge.orange { background: var(--orange-lt); color: var(--orange-dk); }
 .alert-badge.yellow { background: var(--amber-bg);  color: var(--amber); }
 
-/* ── Utils ──────────────────────────────────────────── */
+/* ── Utils ── */
 .empty-state { padding: 28px; text-align: center; color: var(--text2); font-size: 0.85rem; }
 .spinner {
   display: inline-block; width: 16px; height: 16px;
@@ -314,11 +323,25 @@ header {
     </div>
     <div class="header-right">
       <div class="user-pill">
-        <div class="user-avatar" id="user-avatar">AD</div>
-        <span class="user-name" id="user-name">Admin</span>
-        <span class="role-pill admin" id="user-role-badge">Admin</span>
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span class="user-name" id="user-name">–</span>
+        <span class="role-pill employe" id="user-role-badge">–</span>
       </div>
-      <button class="btn-header admin" id="btn-admin" onclick="window.location.href='admin.html'">⚙️ Admin</button>
+
+      <!-- Bouton Admin (visible si admin) -->
+      <button class="btn-header admin" id="btn-admin"
+              style="display:none"
+              onclick="window.location.href='admin.html'">
+        ⚙️ Admin
+      </button>
+
+      <!-- Bouton Gérant (visible si gerant ou admin) -->
+      <button class="btn-header gerant" id="btn-gerant"
+              style="display:none"
+              onclick="window.location.href='gerant.html'">
+        🧊 Chambre froide
+      </button>
+
       <button class="btn-header" onclick="Auth.logout()">Déconnexion</button>
     </div>
   </header>
@@ -393,68 +416,42 @@ header {
     </div>
 
   </div>
-</div>
+</div><!-- /wrapper -->
 
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
-
 <script>
-/* ── Graphique Chart.js ──────────────────────────────── */
-function loadChart() {
-  const ctx = document.getElementById('chartVentes').getContext('2d');
-  if (window._chart) window._chart.destroy();
+// ── Affichage boutons selon rôle ──────────────────────
+(function applyRoleButtons() {
+    const session = Auth.getSession();
+    if (!session) return;
 
-  const labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-  const data   = [98000, 142000, 87000, 165000, 210000, 184500, 0];
+    const initiales = (session.nom || session.email || "U")
+        .split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
 
-  window._chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Ventes FCFA',
-        data,
-        backgroundColor: data.map((_, i) =>
-          i === 5 ? 'rgba(255,107,26,1)' : 'rgba(255,107,26,0.18)'),
-        borderColor: data.map((_, i) =>
-          i === 5 ? '#E05510' : 'rgba(255,107,26,0.4)'),
-        borderWidth: 1.5,
-        borderRadius: 6,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: v => new Intl.NumberFormat('fr-FR').format(v.raw) + ' FCFA'
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid: { color: 'rgba(232,224,216,0.5)' },
-          ticks: { color: '#888880', font: { size: 11 } }
-        },
-        y: {
-          grid: { color: 'rgba(232,224,216,0.5)' },
-          ticks: {
-            color: '#888880', font: { size: 11 },
-            callback: v => (v / 1000) + 'k'
-          }
-        }
-      }
+    document.getElementById("user-avatar").textContent    = initiales;
+    document.getElementById("user-name").textContent      = session.nom || session.email;
+
+    const badge = document.getElementById("user-role-badge");
+    const roleLabels = { admin:"🔑 Admin", gerant:"📋 Gérant", employe:"👷 Employé" };
+    badge.textContent = roleLabels[session.role] || session.role;
+    badge.className   = "role-pill " + session.role;
+
+    // Bouton Admin → uniquement admin
+    if (session.role === "admin") {
+        document.getElementById("btn-admin").style.display = "block";
     }
-  });
-}
 
-/* Appelé par app.js après chargement des données réelles.
-   Si app.js n'est pas encore disponible, on affiche des données
-   d'exemple pour que la page ne soit pas vide. */
-if (typeof window.Auth === 'undefined') {
-  loadChart();
-}
+    // Bouton Gérant → gérant ET admin (l'admin peut aussi gérer la chambre froide)
+    if (session.role === "gerant" || session.role === "admin") {
+        document.getElementById("btn-gerant").style.display = "block";
+    }
+
+    // Bannière accès restreint → employé uniquement
+    if (session.role === "employe") {
+        document.getElementById("access-banner").classList.add("visible");
+    }
+})();
 </script>
 </body>
 </html>

@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AquaDash – Gérant</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:      #0a0f0d;
+            --s1:      #111a14;
+            --s2:      #172010;
+            --s3:      #1e2a1a;
+            --border:  rgba(255,255,255,0.07);
+            --accent:  #4ade80;
+            --accent2: #22d3ee;
+            --warn:    #fbbf24;
+            --danger:  #f87171;
+            --blue:    #60a5fa;
+            --text:    #e8f5e9;
+            --muted:   #6b8f71;
+            --r:       14px;
+            --sh:      0 4px 32px rgba(0,0,0,0.5);
+            --fh:      'Syne', sans-serif;
+            --fb:      'DM Sans', sans-serif;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--fb); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+        body::before {
+            content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background:
+                radial-gradient(ellipse 70% 50% at 5% 0%,   rgba(74,222,128,0.06) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 95% 100%, rgba(34,211,238,0.05) 0%, transparent 55%);
+        }
+        /* Grille déco */
+        body::after {
+            content: ''; position: fixed; inset: 0; pointer-events: none;
+            background-image: linear-gradient(rgba(74,222,128,0.02) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(74,222,128,0.02) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+        .wrap { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 24px 20px 80px; }
+
+        /* ── HEADER ── */
+        header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--border); animation: fd .4s ease both; flex-wrap: wrap; gap: 12px; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 12px; display: grid; place-items: center; font-size: 21px; }
+        .logo h1 { font-family: var(--fh); font-size: 1.35rem; font-weight: 800; letter-spacing: -.5px; }
+        .logo h1 span { color: var(--accent); }
+        .logo .tag { font-size: .65rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: rgba(74,222,128,.12); color: var(--accent); border: 1px solid rgba(74,222,128,.25); margin-left: 4px; }
+        .hright { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .user-pill { display: flex; align-items: center; gap: 8px; background: var(--s1); border: 1px solid var(--border); border-radius: 30px; padding: 5px 14px 5px 7px; }
+        .uav { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #0a0f0d; }
+        .uname { font-size: .82rem; font-weight: 500; }
+        .btn-h { background: none; border: 1px solid var(--border); border-radius: 9px; color: var(--muted); font-family: var(--fb); font-size: .78rem; padding: 7px 13px; cursor: pointer; transition: all .2s; }
+        .btn-h:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── TABS ── */
+        .tabs { display: flex; gap: 4px; background: var(--s1); border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 24px; overflow-x: auto; animation: fu .4s .1s ease both; }
+        .tab { flex-shrink: 0; padding: 9px 18px; border: none; border-radius: 8px; background: transparent; color: var(--muted); font-family: var(--fb); font-size: .84rem; font-weight: 500; cursor: pointer; transition: all .2s; white-space: nowrap; }
+        .tab.active { background: var(--s3); color: var(--text); }
+
+        /* ── KPI BAR ── */
+        .kpi-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px,1fr)); gap: 12px; margin-bottom: 24px; animation: fu .4s .15s ease both; }
+        .kc { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; position: relative; overflow: hidden; transition: transform .2s; cursor: default; }
+        .kc:hover { transform: translateY(-2px); }
+        .kc::after { content: ''; position: absolute; inset: 0 0 auto 0; height: 2px; }
+        .kc.g::after { background: var(--accent); }
+        .kc.b::after { background: var(--blue); }
+        .kc.y::after { background: var(--warn); }
+        .kc.r::after { background: var(--danger); }
+        .kc.c::after { background: var(--accent2); }
+        .kl { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+        .kv { font-family: var(--fh); font-size: 1.55rem; font-weight: 700; line-height: 1; }
+        .kc.g .kv { color: var(--accent); }
+        .kc.b .kv { color: var(--blue); }
+        .kc.y .kv { color: var(--warn); }
+        .kc.r .kv { color: var(--danger); }
+        .kc.c .kv { color: var(--accent2); }
+        .ks { font-size: .7rem; color: var(--muted); margin-top: 3px; }
+
+        /* ── CARD ── */
+        .card { background: var(--s1); border: 1px solid var(--border); border-radius: var(--r); padding: 22px; box-shadow: var(--sh); animation: fu .4s ease both; }
+        .card + .card { margin-top: 16px; }
+        .ch { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+        .ct { font-family: var(--fh); font-size: .95rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .ct .ic { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 15px; background: var(--s3); }
+        .cbadge { font-size: .68rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; background: var(--s3); color: var(--muted); }
+
+        /* ── GRID LAYOUT ── */
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+
+        /* ── SECTION ── */
+        .sec { display: none; }
+        .sec.active { display: block; }
+
+        /* ── TABLES ── */
+        .tbl-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { border-bottom: 1px solid var(--border); }
+        th { text-align: left; font-size: .7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 8px 12px 12px; white-space: nowrap; }
+        tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background .15s; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        tbody tr:last-child { border: none; }
+        td { padding: 11px 12px; font-size: .84rem; vertical-align: middle; }
+
+        /* ── BADGES ── */
+        .bdg { display: inline-flex; align-items: center; gap: 5px; font-size: .68rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+        .bdg.g  { background: rgba(74,222,128,.12); color: var(--accent);  border: 1px solid rgba(74,222,128,.2); }
+        .bdg.r  { background: rgba(248,113,113,.12); color: var(--danger); border: 1px solid rgba(248,113,113,.2); }
+        .bdg.y  { background: rgba(251,191,36,.12);  color: var(--warn);   border: 1px solid rgba(251,191,36,.2); }
+        .bdg.b  { background: rgba(96,165,250,.12);  color: var(--blue);   border: 1px solid rgba(96,165,250,.2); }
+        .bdg.c  { background: rgba(34,211,238,.12);  color: var(--accent2);border: 1px solid rgba(34,211,238,.2); }
+
+        /* ── FORMULAIRES ── */
+        .fg { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+        @media (max-width: 600px) { .fg { grid-template-columns: 1fr; } }
+        .ff { display: flex; flex-direction: column; gap: 6px; }
+        .ff.full { grid-column: 1/-1; }
+        .ff label { font-size: .74rem; font-weight: 500; color: var(--muted); letter-spacing: .03em; }
+        .ff input, .ff select, .ff textarea {
+            background: var(--s2); border: 1px solid var(--border); border-radius: 9px;
+            color: var(--text); font-family: var(--fb); font-size: .88rem;
+            padding: 10px 13px; outline: none; transition: border-color .2s, box-shadow .2s;
+        }
+        .ff input:focus, .ff select:focus, .ff textarea:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,222,128,.1);
+        }
+        .ff select option { background: var(--s2); }
+        .ff textarea { resize: vertical; min-height: 70px; }
+
+        /* ── BOUTONS ── */
+        .btn-g {
+            background: linear-gradient(135deg, var(--accent), #22c55e);
+            border: none; border-radius: 9px; color: #0a0f0d;
+            font-family: var(--fh); font-size: .88rem; font-weight: 700;
+            padding: 11px 22px; cursor: pointer; transition: opacity .2s, transform .15s;
+            display: inline-flex; align-items: center; gap: 7px;
+        }
+        .btn-g:hover { opacity: .9; transform: translateY(-1px); }
+        .btn-g:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+        .btn-b {
+            background: rgba(96,165,250,.1); border: 1px solid rgba(96,165,250,.3);
+            border-radius: 9px; color: var(--blue); font-family: var(--fb); font-size: .84rem;
+            padding: 9px 16px; cursor: pointer; transition: all .2s;
+        }
+        .btn-b:hover { background: rgba(96,165,250,.18); }
+
+        /* ── MSG ── */
+        .msg { display: none; margin-top: 14px; padding: 11px 14px; border-radius: 9px; font-size: .82rem; font-weight: 500; align-items: center; gap: 8px; }
+        .msg.ok  { display: flex; background: rgba(74,222,128,.1);  color: var(--accent); border: 1px solid rgba(74,222,128,.2); }
+        .msg.err { display: flex; background: rgba(248,113,113,.1); color: var(--danger); border: 1px solid rgba(248,113,113,.2); }
+
+        /* ── ÉTATS VIDES ── */
+        .empty { padding: 32px; text-align: center; color: var(--muted); font-size: .84rem; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 7px; vertical-align: middle; }
+
+        /* ── MARGE COLOR ── */
+        .pos { color: var(--accent); font-weight: 600; }
+        .neg { color: var(--danger); font-weight: 600; }
+
+        /* ── CHART ── */
+        .chart-wrap { height: 240px; position: relative; }
+
+        /* ── ALERTE ROW ── */
+        .alerte-row { display: flex; align-items: center; gap: 12px; background: var(--s2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; margin-bottom: 8px; }
+        .adot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+        .adot.r { background: var(--danger); box-shadow: 0 0 7px var(--danger); }
+        .adot.y { background: var(--warn);   box-shadow: 0 0 7px var(--warn); }
+        .adot.o { background: #fb923c;       box-shadow: 0 0 7px #fb923c; }
+
+        @keyframes fd  { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: none; } }
+        @keyframes fu  { from { opacity:0; transform: translateY(14px);  } to { opacity:1; transform: none; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon">🧊</div>
+            <div>
+                <h1>Aqua<span>Dash</span> <span class="tag">GÉRANT</span></h1>
+            </div>
+        </div>
+        <div class="hright">
+            <div class="user-pill">
+                <div class="uav" id="uav">G</div>
+                <span class="uname" id="uname">–</span>
+            </div>
+            <button class="btn-h" onclick="window.location.href='index.html'">→ Dashboard</button>
+            <button class="btn-h" onclick="Auth.logout()">Déconnexion</button>
+        </div>
+    </header>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('stock',this)">🧊 Chambre froide</button>
+        <button class="tab" onclick="switchTab('entree',this)">📦 Nouvelle entrée</button>
+        <button class="tab" onclick="switchTab('sortie',this)">🚚 Sortie / Transfert</button>
+        <button class="tab" onclick="switchTab('mouvements',this)">📋 Historique</button>
+        <button class="tab" onclick="switchTab('marge',this)">💹 Marge bénéficiaire</button>
+        <button class="tab" onclick="switchTab('employes',this)">👷 Employés</button>
+    </div>
+
+    <!-- KPI BAR -->
+    <div class="kpi-bar">
+        <div class="kc g"><div class="kl">Stock total</div><div class="kv" id="kpi-stock">–</div><div class="ks">kg en chambre froide</div></div>
+        <div class="kc b"><div class="kl">Valeur achats</div><div class="kv" id="kpi-achats">–</div><div class="ks">FCFA investis</div></div>
+        <div class="kc c"><div class="kl">Chiffre sorties</div><div class="kv" id="kpi-sorties">–</div><div class="ks">FCFA transférés</div></div>
+        <div class="kc g"><div class="kl">Marge brute</div><div class="kv" id="kpi-marge">–</div><div class="ks">FCFA bénéfice</div></div>
+        <div class="kc r"><div class="kl">Alertes</div><div class="kv" id="kpi-alertes">–</div><div class="ks">expirations proches</div></div>
+    </div>
+
+    <!-- ══════════════ STOCK CHAMBRE FROIDE ══════════════ -->
+    <div class="sec active" id="tab-stock">
+        <div class="card">
+            <div class="ch">
+                <div class="ct"><div class="ic">🧊</div>Stock chambre froide</div>
+                <button class="btn-b" onclick="loadAll()">↻ Actualiser</button>
+            </div>
+            <div class="tbl-wrap">
+                <table>
+                    <thead><tr>
+                        <th>Produit</th><th>Réf.</th><th>Stock (kg)</th>
+                        <th>Prix achat/kg</th><th>Prix vente/kg</th>
+                        <th>Expiration</th><th>Statut</th>
+                    </tr></thead>
+                    <tbody id="tbl-stock"><tr><td colspan="7" class="empty"><span class="spinner"></span>Chargement…</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Alertes expiration -->
+        <div class="card" style="margin-top:16px;">
+            <div class="ch">
+                <div class="ct"><div class="ic">⚠️</div>Alertes expiration</div>
+                <span class="cbadge" id="badge-alertes">…</span>
+            </div>
+            <div id="zone-alertes"><div class="empty"><span class="spinner"></span>Chargement…</div></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ NOUVELLE ENTRÉE ══════════════ -->
+    <div class="sec" id="tab-entree">
+        <div class="card">
+            <div class="ch"><div class="ct"><div class="ic">📦</div>Enregistrer une entrée (nouvel achat)</div></div>
+            <div class="fg">
+                <div class="ff">
+                    <label>Produit</label>
+                    <select id="e-produit"><option value="">— Sélectionner —</option></select>
+                </div>
+                <div class="ff">
+                    <label>Quantité (kg)</label>
+                    <input type="number" id="e-quantite" placeholder="Ex : 50" min="0.1" step="0.1"/>
+                </div>
+                <div class="ff">
+                    <label>Prix d'achat / kg (FCFA)</label>
+                    <input type="number" id="e-prix" placeholder="Ex : 1500" min="0"/>
+                </div>
+                <div class="ff">
+                    <label>Note (facultatif)</label>
+                    <input type="text" id="e-note" placeholder="Ex : Livraison fournisseur Kouamé"/>
+                </div>
+            </div>
+
+            <!-- Aperçu coût total -->
+            <div id="apercu-entree" style="display:none;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:.84rem;">
+                <div style="color:var(--muted);margin-bottom:6px;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;">Aperçu de l'entrée</div>
+                <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                    <span>Quantité : <strong id="ap-qty" style="color:var(--accent)">–</strong></span>
+                    <span>Coût total : <strong id="ap-cout" style="color:var(--warn)">–</strong></span>
+                    <span>Marge estimée : <strong id="ap-marge" style="color:var(--accent2)">–</strong></span>
+                </div>
+            </div>
+
+            <button class="btn-g" id="btn-entree" onclick="enregistrerEntree()">📦 Enregistrer l'entrée</button>
+            <div class="msg" id="msg-entree"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ SORTIE / TRANSFERT ══════════════ -->
+    <div class="sec" id="tab-sortie">
+        <div class="card">
+            <div class="ch"><div class="ct"><div class="ic">🚚</div>Transfert vers employé</div></div>
+            <div class="fg">
+                <div class="ff">
+                    <label>Produit à transférer</label>
+                    <select id="s-produit"><option value="">— Sélectionner —</option></select>
+                </div>
+                <div class="ff">
+                    <label>Employé destinataire</label>
+                    <select id="s-employe"><option value="">— Sélectionner —</option></select>
+                </div>
+                <div class="ff">
+                    <label>Quantité (kg)</label>
+                    <input type="number" id="s-quantite" placeholder="Ex : 10" min="0.1" step="0.1"/>
+                </div>
+                <div class="ff">
+                    <label>Note (facultatif)</label>
+                    <input type="text" id="s-note" placeholder="Ex : Réapprovisionnement congélateur 2"/>
+                </div>
+            </div>
+
+            <!-- Stock dispo -->
+            <div id="stock-dispo" style="display:none;background:var(--s2);border:1px solid rgba(74,222,128,.15);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.84rem;">
+                Stock disponible : <strong id="dispo-val" style="color:var(--accent)">–</strong> kg
+            </div>
+
+            <button class="btn-g" id="btn-sortie" onclick="enregistrerSortie()">🚚 Confirmer le transfert</button>
+            <div class="msg" id="msg-sortie"></div>
+        </div>
+
+        <!-- Derniers transferts du jour -->
+        <div class="card" style="margin-top:16px;">
+            <div class="ch"><div class="ct"><div class="ic">📋</div>Transferts d'aujourd'hui</div></div>
+            <div id="transferts-jour"><div class="empty"><span class="spinner"></span>Chargement…</div></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ HISTORIQUE MOUVEMENTS ══════════════ -->
+    <div class="sec" id="tab-mouvements">
+        <div class="card">
+            <div class="ch">
+                <div class="ct"><div class="ic">📋</div>Historique des mouvements</div>
+                <div style="display:flex;gap:8px;">
+                    <select id="filtre-type" onchange="filtrerMvt()" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--fb);font-size:.8rem;padding:6px 10px;outline:none;">
+                        <option value="">Tous les types</option>
+                        <option value="entree">Entrées</option>
+                        <option value="sortie">Sorties</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tbl-wrap">
+                <table>
+                    <thead><tr>
+                        <th>Date</th><th>Type</th><th>Produit</th>
+                        <th>Quantité</th><th>Détail</th><th>Par</th>
+                    </tr></thead>
+                    <tbody id="tbl-mvt"><tr><td colspan="6" class="empty"><span class="spinner"></span>Chargement…</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════ MARGE BÉNÉFICIAIRE ══════════════ -->
+    <div class="sec" id="tab-marge">
+        <div class="grid2">
+            <div class="card">
+                <div class="ch"><div class="ct"><div class="ic">💹</div>Marge par produit</div></div>
+                <div class="tbl-wrap">
+                    <table>
+                        <thead><tr>
+                            <th>Produit</th><th>Achat/kg</th><th>Vente/kg</th>
+                            <th>Kg sortis</th><th>Coût achat</th><th>Revenu</th><th>Marge</th><th>%</th>
+                        </tr></thead>
+                        <tbody id="tbl-marge"><tr><td colspan="8" class="empty"><span class="spinner"></span>Chargement…</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="ch"><div class="ct"><div class="ic">📊</div>Achat vs Ventes</div></div>
+                <div class="chart-wrap"><canvas id="chartMarge"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════ EMPLOYÉS ══════════════ -->
+    <div class="sec" id="tab-employes">
+        <div class="card">
+            <div class="ch"><div class="ct"><div class="ic">👷</div>Stock reçu par employé</div></div>
+            <div id="zone-employes"><div class="empty"><span class="spinner"></span>Chargement…</div></div>
+        </div>
+    </div>
+
+</div><!-- /wrap -->
+
+<script src="js/auth.js"></script>
+<script>
+"use strict";
+
+// ══════════════════════════════════════
+// AUTH GUARD
+// ══════════════════════════════════════
+const session = Auth.requireAuth();
+if (session) {
+    if (!["gerant","admin"].includes(session.role)) window.location.href = "index.html";
+    const initiales = (session.nom||session.email||"G").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
+    document.getElementById("uav").textContent  = initiales;
+    document.getElementById("uname").textContent = session.nom || session.email;
+}
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let STATE = { stock: [], employes: [], mouvements: [], totaux: {} };
+let chartMargeInstance = null;
+
+// ══════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════
+const fmt  = n => Number(n||0).toLocaleString("fr-FR");
+const fmtF = n => fmt(n) + " FCFA";
+const fmtD = iso => iso ? new Date(iso).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}) : "–";
+const esc  = s => String(s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today = () => new Date().toISOString().split("T")[0];
+
+async function apiFetch(endpoint, opts={}) {
+    const res = await fetch(`/.netlify/functions/${endpoint}`, {
+        ...opts,
+        headers: { "Content-Type":"application/json", ...Auth.getAuthHeader(), ...(opts.headers||{}) }
+    });
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { throw new Error("Réponse invalide du serveur"); }
+    if (!res.ok) throw new Error(data.error || "Erreur " + res.status);
+    return data;
+}
+
+function showMsg(id, type, text) {
+    const el = document.getElementById(id);
+    el.className = "msg " + type;
+    el.textContent = text;
+}
+
+function switchTab(name, btn) {
+    document.querySelectorAll(".sec").forEach(s=>s.classList.remove("active"));
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    document.getElementById("tab-"+name).classList.add("active");
+    btn.classList.add("active");
+}
+
+// ══════════════════════════════════════
+// CHARGEMENT PRINCIPAL
+// ══════════════════════════════════════
+async function loadAll() {
+    try {
+        const data = await apiFetch("gerant-stats");
+        STATE.stock      = data.stock      || [];
+        STATE.employes   = data.employes   || [];
+        STATE.mouvements = data.mouvements || [];
+        STATE.totaux     = data.totaux     || {};
+
+        updateKPIs(data.totaux, data.stock);
+        renderStock(data.stock);
+        renderAlertes(data.stock);
+        renderMouvements(data.mouvements);
+        renderMarge(data.stock);
+        renderEmployes(data.stock_employes || [], data.employes);
+        renderTransfertsJour(data.mouvements);
+        populateSelects(data.stock, data.employes);
+
+    } catch(err) {
+        console.error("[loadAll]", err);
+    }
+}
+
+// ══════════════════════════════════════
+// KPIs
+// ══════════════════════════════════════
+function updateKPIs(t, stock) {
+    const totalKg = stock.reduce((s,p) => s + Number(p.quantite||0), 0);
+    document.getElementById("kpi-stock").textContent   = fmt(totalKg) + " kg";
+    document.getElementById("kpi-achats").textContent  = fmt(t.total_achats);
+    document.getElementById("kpi-sorties").textContent = fmt(t.total_rev_sorties);
+    document.getElementById("kpi-marge").textContent   = fmt(t.total_marge);
+    document.getElementById("kpi-alertes").textContent = t.nb_alertes || 0;
+}
+
+// ══════════════════════════════════════
+// STOCK CHAMBRE FROIDE
+// ══════════════════════════════════════
+function renderStock(stock) {
+    const tbody = document.getElementById("tbl-stock");
+    if (!stock.length) { tbody.innerHTML = `<tr><td colspan="7" class="empty">Aucun produit</td></tr>`; return; }
+
+    const today0 = new Date(); today0.setHours(0,0,0,0);
+
+    tbody.innerHTML = stock.map(p => {
+        const qty = Number(p.quantite||0);
+        const exp = p.date_expiration ? new Date(p.date_expiration) : null;
+        if (exp) exp.setHours(0,0,0,0);
+        const diff = exp ? (exp - today0) / 86400000 : null;
+
+        let statut = `<span class="bdg g">✓ OK</span>`;
+        if (qty < 5)          statut = `<span class="bdg y">⚠ Stock bas</span>`;
+        if (qty === 0)         statut = `<span class="bdg r">✗ Épuisé</span>`;
+        if (diff !== null && diff < 0)  statut = `<span class="bdg r">✗ Expiré</span>`;
+        if (diff !== null && diff <= 1) statut = `<span class="bdg y">⚠ Expire bientôt</span>`;
+
+        return `<tr>
+            <td><strong>${esc(p.nom)}</strong></td>
+            <td style="color:var(--muted)">${esc(p.reference||"–")}</td>
+            <td><strong style="color:var(--accent)">${fmt(qty)} kg</strong></td>
+            <td>${p.prix_achat_kg ? fmtF(p.prix_achat_kg) : '<span style="color:var(--muted)">–</span>'}</td>
+            <td>${p.prix_kg ? fmtF(p.prix_kg) : '<span style="color:var(--muted)">–</span>'}</td>
+            <td>${exp ? exp.toLocaleDateString("fr-FR") : '<span style="color:var(--muted)">–</span>'}</td>
+            <td>${statut}</td>
+        </tr>`;
+    }).join("");
+}
+
+// ══════════════════════════════════════
+// ALERTES
+// ══════════════════════════════════════
+function renderAlertes(stock) {
+    const zone = document.getElementById("zone-alertes");
+    const today0 = new Date(); today0.setHours(0,0,0,0);
+
+    const alertes = stock.filter(p => {
+        if (!p.date_expiration) return false;
+        const d = new Date(p.date_expiration); d.setHours(0,0,0,0);
+        return (d - today0) / 86400000 <= 2;
+    }).map(p => {
+        const d = new Date(p.date_expiration); d.setHours(0,0,0,0);
+        const diff = (d - today0) / 86400000;
+        return { ...p, diff };
+    }).sort((a,b) => a.diff - b.diff);
+
+    document.getElementById("badge-alertes").textContent = alertes.length + " alerte(s)";
+
+    if (!alertes.length) {
+        zone.innerHTML = `<div class="empty" style="color:var(--accent)">✅ Aucune alerte d'expiration</div>`;
+        return;
+    }
+
+    zone.innerHTML = alertes.map(p => {
+        const cls = p.diff < 0 ? "r" : p.diff < 1 ? "o" : "y";
+        const label = p.diff < 0 ? "Expiré" : p.diff < 1 ? "Aujourd'hui" : "Demain";
+        return `<div class="alerte-row">
+            <div class="adot ${cls}"></div>
+            <div style="flex:1">
+                <div style="font-weight:500;font-size:.88rem">${esc(p.nom)}</div>
+                <div style="font-size:.73rem;color:var(--muted)">Stock : ${fmt(p.quantite)} kg — Expire le ${new Date(p.date_expiration).toLocaleDateString("fr-FR")}</div>
+            </div>
+            <span class="bdg ${cls}">${label}</span>
+        </div>`;
+    }).join("");
+}
+
+// ══════════════════════════════════════
+// HISTORIQUE MOUVEMENTS
+// ══════════════════════════════════════
+function renderMouvements(mvts, filtre="") {
+    const tbody = document.getElementById("tbl-mvt");
+    const filtered = filtre ? mvts.filter(m => m.type === filtre) : mvts;
+
+    if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty">Aucun mouvement</td></tr>`; return; }
+
+    tbody.innerHTML = filtered.map(m => {
+        const typeBdg = m.type === "entree"
+            ? `<span class="bdg b">📦 Entrée</span>`
+            : `<span class="bdg c">🚚 Sortie</span>`;
+        const detail = m.type === "entree"
+            ? (m.prix_achat_kg ? `Achat à ${fmtF(m.prix_achat_kg)}/kg` : "–")
+            : `→ ${esc(m.employe_nom || "–")}`;
+        return `<tr>
+            <td style="color:var(--muted);font-size:.78rem">${fmtD(m.created_at)}</td>
+            <td>${typeBdg}</td>
+            <td><strong>${esc(m.produit_nom||"–")}</strong></td>
+            <td style="color:var(--accent);font-weight:600">${fmt(m.quantite)} kg</td>
+            <td style="color:var(--muted);font-size:.8rem">${detail}</td>
+            <td style="color:var(--muted);font-size:.78rem">${esc(m.createur_nom||"–")}</td>
+        </tr>`;
+    }).join("");
+}
+
+function filtrerMvt() {
+    const v = document.getElementById("filtre-type").value;
+    renderMouvements(STATE.mouvements, v);
+}
+
+// ══════════════════════════════════════
+// TRANSFERTS DU JOUR
+// ══════════════════════════════════════
+function renderTransfertsJour(mvts) {
+    const zone = document.getElementById("transferts-jour");
+    const t0 = today();
+    const sorties = mvts.filter(m => m.type === "sortie" && (m.created_at||"").startsWith(t0));
+
+    if (!sorties.length) {
+        zone.innerHTML = `<div class="empty" style="color:var(--muted)">Aucun transfert aujourd'hui</div>`;
+        return;
+    }
+
+    zone.innerHTML = sorties.map(m => `
+        <div style="display:flex;align-items:center;gap:12px;background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-bottom:8px;">
+            <span style="font-size:1.1rem">🚚</span>
+            <div style="flex:1">
+                <div style="font-size:.86rem;font-weight:500">${esc(m.produit_nom||"–")} → <span style="color:var(--accent2)">${esc(m.employe_nom||"–")}</span></div>
+                <div style="font-size:.75rem;color:var(--muted)">${fmtD(m.created_at)}</div>
+            </div>
+            <strong style="color:var(--accent)">${fmt(m.quantite)} kg</strong>
+        </div>`).join("");
+}
+
+// ══════════════════════════════════════
+// MARGE BÉNÉFICIAIRE
+// ══════════════════════════════════════
+function renderMarge(stock) {
+    const tbody = document.getElementById("tbl-marge");
+    const produits = stock.filter(p => p.total_sorties > 0 || p.total_entrees > 0);
+
+    if (!produits.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty">Aucun mouvement enregistré</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = produits.map(p => {
+        const marge = Number(p.marge_brute||0);
+        const taux  = p.taux_marge;
+        const margeClass = marge >= 0 ? "pos" : "neg";
+        const tauxClass  = (taux === null || taux >= 0) ? "pos" : "neg";
+        return `<tr>
+            <td><strong>${esc(p.nom)}</strong></td>
+            <td>${p.prix_achat_kg ? fmtF(p.prix_achat_kg) : "–"}</td>
+            <td>${p.prix_kg ? fmtF(p.prix_kg) : "–"}</td>
+            <td>${fmt(p.total_sorties)} kg</td>
+            <td style="color:var(--warn)">${fmtF(p.cout_achat||0)}</td>
+            <td style="color:var(--accent2)">${fmtF(p.revenu_sorties||0)}</td>
+            <td class="${margeClass}">${fmtF(marge)}</td>
+            <td class="${tauxClass}">${taux !== null ? taux+"%" : "–"}</td>
+        </tr>`;
+    }).join("");
+
+    renderChartMarge(produits);
+}
+
+function renderChartMarge(produits) {
+    const ctx = document.getElementById("chartMarge");
+    if (chartMargeInstance) { chartMargeInstance.destroy(); chartMargeInstance = null; }
+
+    const labels = produits.map(p => p.nom);
+    const achats = produits.map(p => Math.round(p.cout_achat||0));
+    const revenu = produits.map(p => Math.round(p.revenu_sorties||0));
+
+    chartMargeInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels,
+            datasets: [
+                { label: "Coût achat", data: achats, backgroundColor: "rgba(251,191,36,0.7)", borderRadius: 5 },
+                { label: "Revenu sorties", data: revenu, backgroundColor: "rgba(74,222,128,0.7)", borderRadius: 5 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 500 },
+            plugins: {
+                legend: { labels: { color: "#6b8f71", font: { size: 11 } } },
+                tooltip: {
+                    backgroundColor: "#172010",
+                    titleColor: "#6b8f71", bodyColor: "#e8f5e9",
+                    borderColor: "rgba(255,255,255,0.07)", borderWidth: 1,
+                    callbacks: { label: c => " " + fmtF(c.parsed.y) }
+                }
+            },
+            scales: {
+                x: { ticks: { color: "#6b8f71", font: { size: 10 } }, grid: { color: "rgba(255,255,255,0.03)" } },
+                y: { ticks: { color: "#6b8f71", font: { size: 10 }, callback: v => (v/1000).toFixed(0)+"k" }, grid: { color: "rgba(255,255,255,0.04)" } }
+            }
+        }
+    });
+}
+
+// ══════════════════════════════════════
+// EMPLOYÉS
+// ══════════════════════════════════════
+function renderEmployes(stockEmployes, employes) {
+    const zone = document.getElementById("zone-employes");
+
+    if (!employes.length && !stockEmployes.length) {
+        zone.innerHTML = `<div class="empty">Aucun employé trouvé</div>`;
+        return;
+    }
+
+    // Fusionner employés actifs + données stock reçu
+    const employeMap = {};
+    employes.forEach(e => { employeMap[e.id] = { ...e, total_kg: 0 }; });
+    stockEmployes.forEach(se => {
+        if (employeMap[Object.keys(employeMap).find(k => employeMap[k].nom === se.nom)]) return;
+        // Ajouter si absent
+    });
+
+    zone.innerHTML = stockEmployes.length
+        ? stockEmployes.map(e => `
+            <div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;">
+                <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:14px;font-weight:700;color:#0a0f0d;flex-shrink:0">
+                    ${(e.nom||"E")[0].toUpperCase()}
+                </div>
+                <div style="flex:1">
+                    <div style="font-weight:500;margin-bottom:2px">${esc(e.nom)}</div>
+                    <div style="font-size:.75rem;color:var(--muted)">Total reçu : <strong style="color:var(--accent2)">${fmt(e.total_kg)} kg</strong></div>
+                </div>
+                <span class="bdg c">👷 Employé</span>
+            </div>`).join("")
+        : `<div class="empty">Aucun transfert effectué pour le moment</div>`;
+}
+
+// ══════════════════════════════════════
+// SELECTS DYNAMIQUES
+// ══════════════════════════════════════
+function populateSelects(stock, employes) {
+    const opts = stock.map(p =>
+        `<option value="${p.id}" data-stock="${p.quantite}" data-prix="${p.prix_kg||0}" data-achat="${p.prix_achat_kg||0}">${esc(p.nom)} (${fmt(p.quantite)} kg)</option>`
+    ).join("");
+
+    ["e-produit","s-produit"].forEach(id => {
+        const el = document.getElementById(id);
+        el.innerHTML = `<option value="">— Sélectionner —</option>` + opts;
+    });
+
+    const empOpts = employes.map(e =>
+        `<option value="${e.id}" data-nom="${esc(e.nom)}">${esc(e.nom)}</option>`
+    ).join("");
+    document.getElementById("s-employe").innerHTML =
+        `<option value="">— Sélectionner —</option>` + empOpts;
+}
+
+// ══════════════════════════════════════
+// APERÇU ENTRÉE
+// ══════════════════════════════════════
+document.addEventListener("change", e => {
+    if (["e-produit","e-quantite","e-prix"].includes(e.target.id)) updateApercuEntree();
+});
+document.addEventListener("input", e => {
+    if (["e-quantite","e-prix"].includes(e.target.id)) updateApercuEntree();
+    if (e.target.id === "s-produit" || e.target.id === "s-quantite") updateStockDispo();
+    if (e.target.id === "s-produit") updateStockDispo();
+});
+
+function updateApercuEntree() {
+    const qty   = Number(document.getElementById("e-quantite").value||0);
+    const prix  = Number(document.getElementById("e-prix").value||0);
+    const selEl = document.getElementById("e-produit");
+    const opt   = selEl.options[selEl.selectedIndex];
+    const prixVente = opt ? Number(opt.dataset.prix||0) : 0;
+
+    const ap = document.getElementById("apercu-entree");
+    if (!qty || !prix) { ap.style.display = "none"; return; }
+
+    const cout = qty * prix;
+    const revenu = qty * prixVente;
+    const marge = revenu - cout;
+
+    document.getElementById("ap-qty").textContent   = fmt(qty) + " kg";
+    document.getElementById("ap-cout").textContent  = fmtF(cout);
+    document.getElementById("ap-marge").textContent = (marge >= 0 ? "+" : "") + fmtF(marge);
+    document.getElementById("ap-marge").style.color = marge >= 0 ? "var(--accent)" : "var(--danger)";
+    ap.style.display = "block";
+}
+
+function updateStockDispo() {
+    const selEl = document.getElementById("s-produit");
+    const opt   = selEl.options[selEl.selectedIndex];
+    const zone  = document.getElementById("stock-dispo");
+    if (!opt || !opt.value) { zone.style.display = "none"; return; }
+    document.getElementById("dispo-val").textContent = fmt(opt.dataset.stock||0);
+    zone.style.display = "block";
+}
+
+// ══════════════════════════════════════
+// ENREGISTRER ENTRÉE
+// ══════════════════════════════════════
+async function enregistrerEntree() {
+    const produit_id  = document.getElementById("e-produit").value;
+    const quantite    = document.getElementById("e-quantite").value;
+    const prix_achat  = document.getElementById("e-prix").value;
+    const note        = document.getElementById("e-note").value;
+    const btn         = document.getElementById("btn-entree");
+
+    document.getElementById("msg-entree").className = "msg";
+
+    if (!produit_id || !quantite) {
+        showMsg("msg-entree","err","Sélectionnez un produit et saisissez la quantité.");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "⏳ Enregistrement…";
+
+    try {
+        await apiFetch("mouvements", {
+            method: "POST",
+            body: JSON.stringify({ produit_id, type:"entree", quantite: Number(quantite),
+                prix_achat_kg: prix_achat ? Number(prix_achat) : null, note })
+        });
+
+        showMsg("msg-entree","ok","✅ Entrée enregistrée avec succès !");
+        ["e-produit","e-quantite","e-prix","e-note"].forEach(id => document.getElementById(id).value = "");
+        document.getElementById("apercu-entree").style.display = "none";
+        await loadAll();
+
+    } catch(err) {
+        showMsg("msg-entree","err","❌ " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "📦 Enregistrer l'entrée";
+    }
+}
+
+// ══════════════════════════════════════
+// ENREGISTRER SORTIE
+// ══════════════════════════════════════
+async function enregistrerSortie() {
+    const produit_id = document.getElementById("s-produit").value;
+    const empSel     = document.getElementById("s-employe");
+    const employe_id = empSel.value;
+    const employe_nom= empSel.options[empSel.selectedIndex]?.dataset.nom || "";
+    const quantite   = document.getElementById("s-quantite").value;
+    const note       = document.getElementById("s-note").value;
+    const btn        = document.getElementById("btn-sortie");
+
+    document.getElementById("msg-sortie").className = "msg";
+
+    if (!produit_id || !employe_id || !quantite) {
+        showMsg("msg-sortie","err","Sélectionnez un produit, un employé et saisissez la quantité.");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "⏳ Transfert en cours…";
+
+    try {
+        await apiFetch("mouvements", {
+            method: "POST",
+            body: JSON.stringify({ produit_id, type:"sortie", quantite: Number(quantite),
+                employe_id, employe_nom, note })
+        });
+
+        showMsg("msg-sortie","ok",`✅ ${quantite} kg transférés vers ${employe_nom} !`);
+        ["s-produit","s-employe","s-quantite","s-note"].forEach(id => document.getElementById(id).value = "");
+        document.getElementById("stock-dispo").style.display = "none";
+        await loadAll();
+
+    } catch(err) {
+        showMsg("msg-sortie","err","❌ " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "🚚 Confirmer le transfert";
+    }
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+loadAll();
+</script>
+</body>
+</html>
