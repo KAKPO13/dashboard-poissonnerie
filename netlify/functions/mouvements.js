@@ -1,8 +1,12 @@
 /**
  * Netlify Function : mouvements
- * Gère les entrées et sorties de stock de la chambre froide
- * GET    → liste des mouvements (avec filtres)
- * POST   → enregistre un mouvement + met à jour le stock produit
+ * Gère les entrées et sorties de stock
+ *
+ * ENTRÉE  → ajoute au stock chambre froide (produits.quantite)
+ * SORTIE  → retire du stock chambre froide ET ajoute au stock_employe
+ *
+ * GET  → liste des mouvements
+ * POST → enregistre un mouvement
  */
 
 function json(code, data) {
@@ -19,9 +23,9 @@ async function sbRead(res) {
     try { return JSON.parse(t); } catch { return { _raw: t.slice(0, 300) }; }
 }
 
-// Vérifie token et retourne { userId, role }
 async function verifierToken(event, URL, KEY) {
-    const auth = (event.headers.authorization || event.headers.Authorization || "").replace("Bearer ", "").trim();
+    const auth = (event.headers.authorization || event.headers.Authorization || "")
+        .replace("Bearer ", "").trim();
     if (!auth) throw new Error("Token manquant");
 
     const r = await fetch(`${URL}/auth/v1/user`, {
@@ -30,12 +34,14 @@ async function verifierToken(event, URL, KEY) {
     const u = await sbRead(r);
     if (!r.ok || !u?.id) throw new Error("Token invalide");
 
-    const pr = await fetch(`${URL}/rest/v1/utilisateurs?id=eq.${u.id}&select=role,nom,actif&limit=1`, {
-        headers: { apikey: KEY, Authorization: `Bearer ${auth}` }
-    });
+    const pr = await fetch(
+        `${URL}/rest/v1/utilisateurs?id=eq.${u.id}&select=role,nom,actif&limit=1`,
+        { headers: { apikey: KEY, Authorization: `Bearer ${auth}` } }
+    );
     const p = await sbRead(pr);
     if (!Array.isArray(p) || !p[0]) throw new Error("Profil introuvable");
     if (!p[0].actif) throw new Error("Compte désactivé");
+    if (!["gerant", "admin"].includes(p[0].role)) throw new Error("Accès réservé aux gérants");
 
     return { userId: u.id, role: p[0].role, nom: p[0].nom, token: auth };
 }
@@ -55,10 +61,7 @@ export async function handler(event) {
     try { user = await verifierToken(event, URL, KEY); }
     catch (e) { return json(403, { error: e.message }); }
 
-    // Seuls gérant et admin peuvent gérer les mouvements
-    if (!["gerant", "admin"].includes(user.role)) {
-        return json(403, { error: "Accès réservé aux gérants et administrateurs" });
-    }
+    const h = { apikey: SVC, Authorization: `Bearer ${SVC}`, "Content-Type": "application/json" };
 
     try {
 
@@ -71,8 +74,7 @@ export async function handler(event) {
 
             const r = await fetch(query, { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } });
             const data = await sbRead(r);
-            if (!r.ok) return json(r.status, { error: data?.message || "Erreur lecture mouvements" });
-            return json(200, data || []);
+            return json(r.ok ? 200 : r.status, r.ok ? (data || []) : { error: data?.message || "Erreur" });
         }
 
         // ════ POST : enregistrer un mouvement ════
@@ -83,40 +85,39 @@ export async function handler(event) {
 
             const { produit_id, type, quantite, prix_achat_kg, employe_id, employe_nom, note } = body;
 
-            // Validations
             if (!produit_id) return json(400, { error: "produit_id requis" });
-            if (!type || !["entree", "sortie", "ajustement"].includes(type)) {
+            if (!type || !["entree", "sortie", "ajustement"].includes(type))
                 return json(400, { error: "type requis : entree, sortie ou ajustement" });
-            }
-            if (!quantite || Number(quantite) <= 0) {
+            if (!quantite || Number(quantite) <= 0)
                 return json(400, { error: "quantite doit être > 0" });
-            }
-            if (type === "sortie" && !employe_id) {
+            if (type === "sortie" && !employe_id)
                 return json(400, { error: "employe_id requis pour une sortie" });
+
+            const qty = Number(quantite);
+
+            // ── Lire le stock actuel chambre froide ──
+            const stockRes = await fetch(
+                `${URL}/rest/v1/produits?id=eq.${produit_id}&select=id,nom,quantite&limit=1`,
+                { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } }
+            );
+            const stocks = await sbRead(stockRes);
+            if (!Array.isArray(stocks) || !stocks[0])
+                return json(404, { error: "Produit introuvable" });
+
+            const stockActuel = Number(stocks[0].quantite || 0);
+
+            // ── Vérifier stock suffisant pour une sortie ──
+            if (type === "sortie" && stockActuel < qty) {
+                return json(400, {
+                    error: `Stock chambre froide insuffisant. Disponible : ${stockActuel} kg, demandé : ${qty} kg`
+                });
             }
 
-            // 1. Vérifier le stock actuel si c'est une sortie
-            if (type === "sortie") {
-                const stockRes = await fetch(
-                    `${URL}/rest/v1/produits?id=eq.${produit_id}&select=quantite,nom&limit=1`,
-                    { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } }
-                );
-                const stocks = await sbRead(stockRes);
-                if (!Array.isArray(stocks) || !stocks[0]) {
-                    return json(404, { error: "Produit introuvable" });
-                }
-                if (Number(stocks[0].quantite) < Number(quantite)) {
-                    return json(400, {
-                        error: `Stock insuffisant. Disponible : ${stocks[0].quantite} kg, demandé : ${quantite} kg`
-                    });
-                }
-            }
-
-            // 2. Insérer le mouvement
+            // ── 1. Insérer le mouvement ──
             const mvtData = {
                 produit_id:    Number(produit_id),
                 type,
-                quantite:      Number(quantite),
+                quantite:      qty,
                 note:          note || null,
                 created_by:    user.userId,
             };
@@ -128,56 +129,65 @@ export async function handler(event) {
 
             const mvtRes = await fetch(`${URL}/rest/v1/mouvements_stock`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    apikey: SVC, Authorization: `Bearer ${SVC}`,
-                    Prefer: "return=representation"
-                },
+                headers: { ...h, Prefer: "return=representation" },
                 body: JSON.stringify(mvtData)
             });
             const mvt = await sbRead(mvtRes);
             if (!mvtRes.ok) return json(mvtRes.status, { error: mvt?.message || "Erreur insertion mouvement" });
 
-            // 3. Mettre à jour la quantité dans la table produits
-            const delta = type === "entree" ? Number(quantite) : -Number(quantite);
-            const updateRes = await fetch(
-                `${URL}/rest/v1/produits?id=eq.${produit_id}`,
-                {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json",
-                        apikey: SVC, Authorization: `Bearer ${SVC}`,
-                        Prefer: "return=minimal"
-                    },
-                    // Incrémenter / décrémenter via RPC n'est pas dispo en REST simple :
-                    // On récupère d'abord la valeur actuelle puis on patch
-                    body: JSON.stringify({ quantite: delta }) // sera remplacé ci-dessous
-                }
-            );
-
-            // Patch correct : lire quantite actuelle puis écrire nouvelle valeur
-            const curRes = await fetch(
-                `${URL}/rest/v1/produits?id=eq.${produit_id}&select=quantite&limit=1`,
-                { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } }
-            );
-            const cur = await sbRead(curRes);
-            const newQty = Math.max(0, Number(cur?.[0]?.quantite || 0) + delta);
-
-            const patchBody = { quantite: newQty };
-            // Si entrée avec prix achat, mettre à jour aussi prix_achat_kg
+            // ── 2. Mettre à jour stock chambre froide (produits.quantite) ──
+            const delta = type === "entree" ? qty : -qty;
+            const newQtyCF = Math.max(0, stockActuel + delta);
+            const patchBody = { quantite: newQtyCF };
             if (type === "entree" && prix_achat_kg) patchBody.prix_achat_kg = Number(prix_achat_kg);
 
             await fetch(`${URL}/rest/v1/produits?id=eq.${produit_id}`, {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    apikey: SVC, Authorization: `Bearer ${SVC}`,
-                    Prefer: "return=minimal"
-                },
+                headers: { ...h, Prefer: "return=minimal" },
                 body: JSON.stringify(patchBody)
             });
 
-            return json(201, { success: true, mouvement: Array.isArray(mvt) ? mvt[0] : mvt, new_quantite: newQty });
+            // ── 3. Si SORTIE → mettre à jour stock_employe ──
+            if (type === "sortie") {
+
+                // Vérifier si une ligne existe déjà pour ce couple (employé, produit)
+                const seRes = await fetch(
+                    `${URL}/rest/v1/stock_employe?employe_id=eq.${employe_id}&produit_id=eq.${produit_id}&select=id,quantite&limit=1`,
+                    { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } }
+                );
+                const seRows = await sbRead(seRes);
+
+                if (Array.isArray(seRows) && seRows.length > 0) {
+                    // Ligne existante → incrémenter
+                    const newQtyEmp = Number(seRows[0].quantite || 0) + qty;
+                    await fetch(
+                        `${URL}/rest/v1/stock_employe?employe_id=eq.${employe_id}&produit_id=eq.${produit_id}`,
+                        {
+                            method: "PATCH",
+                            headers: { ...h, Prefer: "return=minimal" },
+                            body: JSON.stringify({ quantite: newQtyEmp, updated_at: new Date().toISOString() })
+                        }
+                    );
+                } else {
+                    // Nouvelle ligne → insérer
+                    await fetch(`${URL}/rest/v1/stock_employe`, {
+                        method: "POST",
+                        headers: { ...h, Prefer: "return=minimal" },
+                        body: JSON.stringify({
+                            employe_id,
+                            produit_id: Number(produit_id),
+                            quantite:   qty,
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+                }
+            }
+
+            return json(201, {
+                success:         true,
+                mouvement:       Array.isArray(mvt) ? mvt[0] : mvt,
+                stock_cf_restant: newQtyCF
+            });
         }
 
         return json(405, { error: "Méthode non autorisée" });
@@ -187,3 +197,4 @@ export async function handler(event) {
         return json(500, { error: err.message });
     }
 }
+
