@@ -1,138 +1,48 @@
-/**
- * Netlify Function : auth-login
- * Corrigé : gestion d'erreur robuste, jamais de HTML en réponse
- */
-
-// Helper : toujours répondre en JSON propre
-function jsonResponse(statusCode, data) {
-    return {
-        statusCode,
-        headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-        },
-        body: JSON.stringify(data)
-    };
-}
+import { jsonResp, corsResp, readBody, parseBody } from './_helpers.js';
 
 export async function handler(event) {
+    if (event.httpMethod === "OPTIONS") return corsResp();
+    if (event.httpMethod !== "POST") return jsonResp(405,{error:"Methode non autorisee"});
 
-    // Preflight CORS
-    if (event.httpMethod === "OPTIONS") {
-        return { statusCode: 200, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type" }, body: "" };
-    }
+    var URL = process.env.SUPABASE_URL;
+    var KEY = process.env.SUPABASE_KEY;
+    var SVC = process.env.SUPABASE_SERVICE_KEY || KEY;
+    if (!URL||!KEY) return jsonResp(500,{error:"Configuration serveur manquante"});
 
-    if (event.httpMethod !== "POST") {
-        return jsonResponse(405, { error: "Méthode non autorisée" });
-    }
-
-    const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SUPABASE_KEY = process.env.SUPABASE_KEY;
-
-    if (!SUPABASE_URL || !SUPABASE_KEY) {
-        console.error("[auth-login] Variables d'environnement manquantes");
-        return jsonResponse(500, { error: "Configuration serveur manquante. Vérifiez SUPABASE_URL et SUPABASE_KEY dans Netlify." });
-    }
-
-    // Parser le body en sécurité
-    let email, password;
-    try {
-        const parsed = JSON.parse(event.body || "{}");
-        email    = parsed.email;
-        password = parsed.password;
-    } catch {
-        return jsonResponse(400, { error: "Corps de requête invalide (JSON attendu)" });
-    }
-
-    if (!email || !password) {
-        return jsonResponse(400, { error: "Email et mot de passe requis" });
-    }
+    var body;
+    try { body = parseBody(event); } catch(e) { return jsonResp(400,{error:e.message}); }
+    var email=body.email, password=body.password;
+    if (!email||!password) return jsonResp(400,{error:"Email et mot de passe requis"});
 
     try {
-        // ── Étape 1 : Authentification Supabase Auth ──
-        const authRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "apikey": SUPABASE_KEY
-            },
-            body: JSON.stringify({ email, password })
-        });
+        var aRes = await fetch(URL+"/auth/v1/token?grant_type=password",{method:"POST",headers:{"Content-Type":"application/json",apikey:KEY},body:JSON.stringify({email:email,password:password})});
+        var aData = await readBody(aRes);
+        if (!aRes.ok||!aData||!aData.access_token) return jsonResp(401,{error:(aData&&(aData.error_description||aData.msg))||"Identifiants incorrects"});
 
-        // Lire la réponse en texte d'abord, puis parser
-        const authText = await authRes.text();
-        let authData;
-        try {
-            authData = JSON.parse(authText);
-        } catch {
-            console.error("[auth-login] Réponse Supabase Auth non-JSON :", authText.slice(0, 200));
-            return jsonResponse(502, { error: "Réponse inattendue de Supabase Auth" });
-        }
+        var token = aData.access_token;
+        var userId = aData.user&&aData.user.id;
+        if (!userId) return jsonResp(500,{error:"ID utilisateur introuvable"});
 
-        if (!authRes.ok || !authData.access_token) {
-            const msg = authData.error_description
-                     || authData.msg
-                     || authData.error
-                     || "Identifiants incorrects";
-            return jsonResponse(401, { error: msg });
-        }
+        var pRes = await fetch(URL+"/rest/v1/utilisateurs?id=eq."+userId+"&select=id,tenant_id,nom,email,role,actif&limit=1",{headers:{apikey:SVC,Authorization:"Bearer "+SVC}});
+        var profiles = await readBody(pRes);
+        if (!Array.isArray(profiles)||!profiles[0]) return jsonResp(403,{error:"Profil introuvable. Contactez votre administrateur."});
+        var p = profiles[0];
+        if (!p.actif) return jsonResp(403,{error:"Votre compte est desactive."});
 
-        const token  = authData.access_token;
-        const userId = authData.user?.id;
-
-        if (!userId) {
-            return jsonResponse(500, { error: "Impossible de récupérer l'identifiant utilisateur" });
-        }
-
-        // ── Étape 2 : Récupérer le profil depuis la table utilisateurs ──
-        const profileUrl = `${SUPABASE_URL}/rest/v1/utilisateurs?id=eq.${userId}&select=id,nom,email,role,actif&limit=1`;
-        const profileRes = await fetch(profileUrl, {
-            headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": `Bearer ${token}`
+        var tenantNom=null, tenantPlan=null, tenantSlug=null;
+        if (p.role!=="super_admin"&&p.tenant_id) {
+            var tRes = await fetch(URL+"/rest/v1/tenants?id=eq."+p.tenant_id+"&select=nom,plan,slug,statut&limit=1",{headers:{apikey:SVC,Authorization:"Bearer "+SVC}});
+            var tenants = await readBody(tRes);
+            if (Array.isArray(tenants)&&tenants[0]) {
+                if (tenants[0].statut!=="actif") return jsonResp(403,{error:"Votre societe est suspendue. Contactez le support."});
+                tenantNom=tenants[0].nom; tenantPlan=tenants[0].plan; tenantSlug=tenants[0].slug;
             }
-        });
-
-        const profileText = await profileRes.text();
-        let profiles;
-        try {
-            profiles = JSON.parse(profileText);
-        } catch {
-            console.error("[auth-login] Réponse profil non-JSON :", profileText.slice(0, 200));
-            return jsonResponse(502, { error: "Impossible de lire le profil utilisateur" });
         }
 
-        if (!profileRes.ok) {
-            console.error("[auth-login] Erreur lecture profil :", profiles);
-            return jsonResponse(500, { error: "Erreur lors de la lecture du profil" });
-        }
+        return jsonResp(200,{token:token,userId:p.id,email:p.email,nom:p.nom,role:p.role,tenant_id:p.tenant_id,tenant_nom:tenantNom,tenant_plan:tenantPlan,tenant_slug:tenantSlug,expires:Date.now()+((aData.expires_in||3600)*1000)});
 
-        if (!Array.isArray(profiles) || profiles.length === 0) {
-            return jsonResponse(403, {
-                error: "Profil introuvable. Contactez votre administrateur pour activer votre compte."
-            });
-        }
-
-        const profile = profiles[0];
-
-        if (!profile.actif) {
-            return jsonResponse(403, {
-                error: "Votre compte est désactivé. Contactez votre administrateur."
-            });
-        }
-
-        // ── Succès ──
-        return jsonResponse(200, {
-            token,
-            userId:  profile.id,
-            email:   profile.email,
-            nom:     profile.nom,
-            role:    profile.role,
-            expires: Date.now() + ((authData.expires_in || 3600) * 1000)
-        });
-
-    } catch (err) {
-        console.error("[auth-login] Erreur inattendue :", err.message);
-        return jsonResponse(500, { error: "Erreur serveur : " + err.message });
+    } catch(err) {
+        console.error("[auth-login]",err.message);
+        return jsonResp(500,{error:"Erreur serveur : "+err.message});
     }
 }

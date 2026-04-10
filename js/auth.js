@@ -1,116 +1,68 @@
-/**
- * auth.js – Module d'authentification partagé
- * Utilise localStorage (persiste entre les pages et onglets)
- * Gère : session, droits, déconnexion, refresh token
- */
-
 "use strict";
-
-const SESSION_KEY = "aqua_session";
-
-// ── Permissions par rôle ──────────────────────────────
-const PERMISSIONS = {
-    voir_produits:  ["employe", "gerant", "admin"],
-    voir_alertes:   ["employe", "gerant", "admin"],
-    voir_ventes:    ["gerant", "admin"],
-    voir_graphique: ["gerant", "admin"],
-    voir_kpi:       ["gerant", "admin"],
-    gerer_users:    ["admin"],
-    creer_comptes:  ["admin"],
-    modifier_roles: ["admin"],
+var SESSION_KEY = "aqua_session";
+var PERMISSIONS = {
+    voir_stock_perso:    ["employe","gerant","admin","super_admin"],
+    voir_alertes:        ["employe","gerant","admin","super_admin"],
+    voir_chambre_froide: ["gerant","admin","super_admin"],
+    gerer_mouvements:    ["gerant","admin","super_admin"],
+    voir_stock_employes: ["gerant","admin","super_admin"],
+    voir_ventes:         ["admin","super_admin"],
+    voir_graphique:      ["admin","super_admin"],
+    gerer_users:         ["admin","super_admin"],
+    gerer_tenants:       ["super_admin"]
 };
-
-// ── Lecture session ───────────────────────────────────
 function getSession() {
     try {
-        // Chercher dans localStorage D'ABORD, puis sessionStorage (compat)
-        const raw = localStorage.getItem(SESSION_KEY)
-                 || sessionStorage.getItem(SESSION_KEY);
+        var raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
         if (!raw) return null;
-        const s = JSON.parse(raw);
-        // Migrer sessionStorage → localStorage si besoin
-        if (!localStorage.getItem(SESSION_KEY) && sessionStorage.getItem(SESSION_KEY)) {
-            localStorage.setItem(SESSION_KEY, raw);
-        }
-        return s;
-    } catch {
-        return null;
-    }
+        return JSON.parse(raw);
+    } catch(e) { return null; }
 }
-
-// ── Sauvegarde session ────────────────────────────────
 function setSession(data) {
-    const payload = JSON.stringify(data);
-    localStorage.setItem(SESSION_KEY, payload);
-    sessionStorage.setItem(SESSION_KEY, payload); // double stockage par sécurité
+    var s = JSON.stringify(data);
+    localStorage.setItem(SESSION_KEY, s);
+    sessionStorage.setItem(SESSION_KEY, s);
 }
-
-// ── Déconnexion ───────────────────────────────────────
 function logout() {
     localStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(SESSION_KEY);
     window.location.href = "login.html";
 }
-
-// ── Vérification session ──────────────────────────────
-/**
- * Retourne la session si valide, sinon redirige vers login.
- * Ne vérifie PAS l'expiration côté client (le serveur le fera).
- * Le token Supabase dure 1h mais peut être rafraîchi.
- */
 function requireAuth() {
-    const session = getSession();
-
-    if (!session || !session.token || !session.role) {
-        window.location.href = "login.html";
-        return null;
+    var s = getSession();
+    if (!s || !s.token || !s.role) { window.location.href = "login.html"; return null; }
+    if (s.expires && Date.now() > s.expires + 300000) {
+        localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY);
+        window.location.href = "login.html"; return null;
     }
-
-    // Expiration : on laisse une marge de 5 minutes
-    // Si expiré depuis plus de 5 min → déconnexion
-    if (session.expires && Date.now() > (session.expires + 5 * 60 * 1000)) {
-        localStorage.removeItem(SESSION_KEY);
-        sessionStorage.removeItem(SESSION_KEY);
-        window.location.href = "login.html";
-        return null;
-    }
-
-    return session;
+    return s;
 }
-
-// ── Vérification rôle minimum ─────────────────────────
-function requireRole(role) {
-    const session = requireAuth();
-    if (!session) return null;
-    const hierarchy = ["employe", "gerant", "admin"];
-    if (hierarchy.indexOf(session.role) < hierarchy.indexOf(role)) {
-        window.location.href = "index.html";
-        return null;
-    }
-    return session;
-}
-
-// ── Permission ────────────────────────────────────────
 function peutFaire(permission) {
-    const session = getSession();
-    if (!session) return false;
-    return (PERMISSIONS[permission] || []).includes(session.role);
+    var s = getSession();
+    if (!s) return false;
+    return (PERMISSIONS[permission] || []).indexOf(s.role) !== -1;
 }
-
-// ── Header Authorization ──────────────────────────────
+function getHomeByRole(role) {
+    var map = { super_admin:"superadmin.html", admin:"admin.html", gerant:"gerant.html", employe:"index.html" };
+    return map[role] || "login.html";
+}
 function getAuthHeader() {
-    const s = getSession();
-    return s ? { Authorization: "Bearer " + s.token } : {};
+    var s = getSession();
+    return s ? { "Authorization": "Bearer " + s.token } : {};
 }
-
-// ── Export global ─────────────────────────────────────
-window.Auth = {
-    getSession,
-    setSession,
-    requireAuth,
-    requireRole,
-    peutFaire,
-    getAuthHeader,
-    logout,
-    SESSION_KEY
-};
+function fillHeader(session) {
+    var initiales = (session.nom || session.email || "U").split(" ").map(function(w){ return w[0]; }).join("").toUpperCase().slice(0,2);
+    var av = document.getElementById("user-avatar");
+    var nm = document.getElementById("user-name");
+    var rb = document.getElementById("user-role-badge");
+    var tn = document.getElementById("tenant-name");
+    if (av) av.textContent = initiales;
+    if (nm) nm.textContent = session.nom || session.email;
+    if (rb) {
+        var labels = { super_admin:"Super Admin", admin:"Admin", gerant:"Gerant", employe:"Employe" };
+        rb.textContent = labels[session.role] || session.role;
+        rb.className = "role-pill " + session.role;
+    }
+    if (tn && session.tenant_nom) tn.textContent = session.tenant_nom;
+}
+window.Auth = { getSession:getSession, setSession:setSession, requireAuth:requireAuth, peutFaire:peutFaire, getHomeByRole:getHomeByRole, getAuthHeader:getAuthHeader, fillHeader:fillHeader, logout:logout };
