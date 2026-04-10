@@ -1,54 +1,18 @@
-/**
- * Netlify Function : factures
- * Corrigé : toujours JSON en retour, jamais de HTML
- */
-
-function jsonResponse(statusCode, data) {
-    return {
-        statusCode,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify(data)
-    };
-}
+import { jsonResp, corsResp, readBody, verifyToken } from './_helpers.js';
 
 export async function handler(event) {
-    if (event.httpMethod === "OPTIONS") {
-        return { statusCode: 200, headers: { "Access-Control-Allow-Origin": "*" }, body: "" };
-    }
+    if (event.httpMethod === "OPTIONS") return corsResp();
+    var URL = process.env.SUPABASE_URL;
+    var SVC = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+    if (!URL) return jsonResp(500,{error:"Configuration manquante"});
 
-    const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SUPABASE_KEY = process.env.SUPABASE_KEY;
-
-    if (!SUPABASE_URL || !SUPABASE_KEY) {
-        return jsonResponse(500, { error: "Configuration manquante : SUPABASE_URL ou SUPABASE_KEY absent" });
-    }
+    var user;
+    try { user = await verifyToken(event,["admin","super_admin"]); } catch(e) { return jsonResp(e.code||403,{error:e.message}); }
+    var tenantId=user.tenantId;
+    var h={apikey:SVC,Authorization:"Bearer "+SVC};
 
     try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/factures?select=*&order=date_facture.desc`, {
-            headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": `Bearer ${SUPABASE_KEY}`
-            }
-        });
-
-        const text = await res.text();
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch {
-            console.error("[factures] Réponse non-JSON :", text.slice(0, 300));
-            return jsonResponse(502, { error: "Réponse inattendue de Supabase" });
-        }
-
-        if (!res.ok) {
-            console.error("[factures] Erreur Supabase :", data);
-            return jsonResponse(res.status, { error: data.message || "Erreur Supabase" });
-        }
-
-        return jsonResponse(200, data);
-
-    } catch (err) {
-        console.error("[factures] Erreur :", err.message);
-        return jsonResponse(500, { error: err.message });
-    }
+        var r = await fetch(URL+"/rest/v1/factures?tenant_id=eq."+tenantId+"&select=*&order=date_facture.desc",{headers:h});
+        return jsonResp(r.ok?200:500, await readBody(r)||[]);
+    } catch(err) { return jsonResp(500,{error:err.message}); }
 }

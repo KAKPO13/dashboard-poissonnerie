@@ -1,371 +1,86 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>AquaDash – Connexion</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg:         #FFFBF5;
-            --surface:    #FFFFFF;
-            --surface2:   #FFF5ED;
-            --border:     #E8E0D8;
-            --border2:    rgba(255,107,26,0.25);
-            --orange:     #FF6B1A;
-            --orange-dk:  #E05510;
-            --orange-lt:  #FFF0E8;
-            --text1:      #1A1A1A;
-            --text2:      #888880;
-            --text3:      #D0CBC4;
-            --danger:     #A32D2D;
-            --danger-bg:  #FCEBEB;
-            --success:    #2E7D32;
-            --success-bg: #EDF7ED;
-            --radius:     16px;
-        }
-
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text1);
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            padding: 20px;
-            overflow: hidden;
-        }
-
-        /* ── Fond décoratif léger ── */
-        body::before {
-            content: '';
-            position: fixed; inset: 0;
-            background:
-                radial-gradient(ellipse 70% 60% at 10% 10%, rgba(255,107,26,0.06) 0%, transparent 60%),
-                radial-gradient(ellipse 50% 50% at 90% 90%, rgba(255,107,26,0.04) 0%, transparent 60%);
-            pointer-events: none;
-        }
-
-        /* ── Grille décorative ── */
-        body::after {
-            content: '';
-            position: fixed; inset: 0;
-            background-image:
-                linear-gradient(rgba(232,224,216,0.5) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(232,224,216,0.5) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-        }
-
-        /* ── Carte login ── */
-        .login-card {
-            position: relative;
-            z-index: 1;
-            background: var(--surface);
-            border: 1.5px solid var(--border);
-            border-radius: var(--radius);
-            padding: 44px 40px 40px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow:
-                0 4px 24px rgba(255,107,26,0.06),
-                0 1px 4px rgba(0,0,0,0.04);
-            animation: slideUp 0.45s cubic-bezier(.16,1,.3,1) both;
-        }
-
-        /* Trait orange en haut */
-        .login-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 20px; right: 20px;
-            height: 3px;
-            background: var(--orange);
-            border-radius: 0 0 3px 3px;
-        }
-
-        /* ── Logo ── */
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 32px;
-        }
-
-        .logo-icon {
-            width: 44px; height: 44px;
-            background: var(--orange);
-            border-radius: 12px;
-            display: grid;
-            place-items: center;
-            font-size: 22px;
-        }
-
-        .logo-text h1 {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.3rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--text1);
-        }
-
-        .logo-text h1 span { color: var(--orange); }
-
-        .logo-text p {
-            font-size: 0.72rem;
-            color: var(--text2);
-            margin-top: 1px;
-        }
-
-        /* ── Champs ── */
-        .field { margin-bottom: 16px; }
-
-        label {
-            display: block;
-            font-size: 0.78rem;
-            font-weight: 500;
-            color: var(--text2);
-            margin-bottom: 7px;
-            letter-spacing: 0.03em;
-            text-transform: uppercase;
-        }
-
-        input {
-            width: 100%;
-            background: var(--surface2);
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            color: var(--text1);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.92rem;
-            padding: 12px 14px;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        input:focus {
-            border-color: var(--orange);
-            box-shadow: 0 0 0 3px rgba(255,107,26,0.12);
-            background: var(--surface);
-        }
-
-        input::placeholder { color: var(--text3); }
-
-        /* ── Bouton ── */
-        .btn {
-            width: 100%;
-            margin-top: 8px;
-            padding: 13px;
-            background: var(--orange);
-            border: none;
-            border-radius: 10px;
-            color: #fff;
-            font-family: 'Syne', sans-serif;
-            font-size: 0.94rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.15s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn:hover   { background: var(--orange-dk); transform: translateY(-1px); }
-        .btn:active  { transform: translateY(0); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        /* ── Messages ── */
-        .msg {
-            display: none;
-            margin-top: 14px;
-            padding: 11px 14px;
-            border-radius: 10px;
-            font-size: 0.82rem;
-            font-weight: 500;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .msg.error {
-            display: flex;
-            background: var(--danger-bg);
-            color: var(--danger);
-            border: 1.5px solid rgba(163,45,45,0.2);
-        }
-
-        .msg.success {
-            display: flex;
-            background: var(--success-bg);
-            color: var(--success);
-            border: 1.5px solid rgba(46,125,50,0.2);
-        }
-
-        /* ── Spinner ── */
-        .spinner {
-            width: 16px; height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-
-        /* ── Séparateur ── */
-        .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 24px 0 20px;
-        }
-
-        /* ── Footer ── */
-        .login-footer {
-            text-align: center;
-            font-size: 0.73rem;
-            color: var(--text2);
-            line-height: 1.6;
-        }
-
-        /* ── Animations ── */
-        @keyframes slideUp {
-            from { opacity:0; transform: translateY(20px); }
-            to   { opacity:1; transform: none; }
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AquaDash - Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFFBF5;--surface:#FFF;--s2:#FFF5ED;--border:#E8E0D8;--orange:#FF6B1A;--odk:#E05510;--t1:#1A1A1A;--t2:#888880;--t3:#D0CBC4;--green:#2E7D32;--gbg:#EDF7ED;--red:#A32D2D;--rbg:#FCEBEB;--r:16px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;display:grid;place-items:center;padding:20px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 60% at 10% 10%,rgba(255,107,26,.06) 0%,transparent 60%),radial-gradient(ellipse 50% 50% at 90% 90%,rgba(255,107,26,.04) 0%,transparent 60%);pointer-events:none}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(232,224,216,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(232,224,216,.5) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+.card{position:relative;z-index:1;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:44px 40px 40px;width:100%;max-width:420px;box-shadow:0 4px 24px rgba(255,107,26,.06);animation:up .4s ease both}
+.card::before{content:'';position:absolute;top:0;left:20px;right:20px;height:3px;background:var(--orange);border-radius:0 0 3px 3px}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.logo-icon{width:44px;height:44px;background:var(--orange);border-radius:12px;display:grid;place-items:center;font-size:22px}
+.logo-text h1{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800}
+.logo-text h1 span{color:var(--orange)}
+.logo-text p{font-size:.72rem;color:var(--t2);margin-top:1px}
+.field{margin-bottom:16px}
+label{display:block;font-size:.75rem;font-weight:500;color:var(--t2);margin-bottom:7px;text-transform:uppercase;letter-spacing:.03em}
+input{width:100%;background:var(--s2);border:1.5px solid var(--border);border-radius:10px;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:.9rem;padding:12px 14px;outline:none;transition:border-color .2s}
+input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,107,26,.1);background:var(--surface)}
+input::placeholder{color:var(--t3)}
+.btn{width:100%;margin-top:8px;padding:13px;background:var(--orange);border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{background:var(--odk)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.msg{display:none;margin-top:14px;padding:11px 14px;border-radius:9px;font-size:.82rem;font-weight:500;align-items:center;gap:8px}
+.msg.ok{display:flex;background:var(--gbg);color:var(--green);border:1.5px solid rgba(46,125,50,.2)}
+.msg.err{display:flex;background:var(--rbg);color:var(--red);border:1.5px solid rgba(163,45,45,.2)}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.divider{height:1px;background:var(--border);margin:22px 0 18px}
+.lnk{text-align:center;font-size:.78rem;color:var(--t2)}
+.lnk a{color:var(--orange);text-decoration:none;font-weight:500}
+@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
 </head>
 <body>
-
-<div class="login-card">
-    <div class="logo">
-        <div class="logo-icon">🐟</div>
-        <div class="logo-text">
-            <h1>Aqua<span>Dash</span></h1>
-            <p>Gestion poissonnerie</p>
-        </div>
-    </div>
-
-    <div class="field">
-        <label for="email">Adresse e-mail</label>
-        <input type="email" id="email"
-               placeholder="vous@exemple.com"
-               autocomplete="email"/>
-    </div>
-
-    <div class="field">
-        <label for="password">Mot de passe</label>
-        <input type="password" id="password"
-               placeholder="••••••••"
-               autocomplete="current-password"/>
-    </div>
-
-    <button class="btn" id="btn-login" onclick="doLogin()">
-        <span id="btn-label">Se connecter</span>
-    </button>
-
-    <div class="msg" id="msg"></div>
-
-    <div class="divider"></div>
-
-    <div class="login-footer">
-        Accès réservé au personnel autorisé.<br>
-        Contactez votre responsable pour obtenir un compte.
-    </div>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">🐟</div>
+    <div class="logo-text"><h1>Aqua<span>Dash</span></h1><p>Plateforme de gestion poissonnerie</p></div>
+  </div>
+  <div class="field"><label>Adresse e-mail</label><input type="email" id="email" placeholder="vous@societe.ci" autocomplete="email"/></div>
+  <div class="field"><label>Mot de passe</label><input type="password" id="password" placeholder="••••••••" autocomplete="current-password"/></div>
+  <button class="btn" id="btn" onclick="doLogin()"><span id="btn-label">Se connecter</span></button>
+  <div class="msg" id="msg"></div>
+  <div class="divider"></div>
+  <div class="lnk">Pas encore de compte ? <a href="register.html">Creer votre espace</a></div>
 </div>
-
 <script>
-    /* ── Rediriger si déjà connecté ── */
-    (function () {
-        try {
-            const raw = localStorage.getItem("aqua_session")
-                     || sessionStorage.getItem("aqua_session");
-            if (!raw) return;
-            const s = JSON.parse(raw);
-            if (s && s.token && s.role) {
-                const redirections = {
-                    admin:   "admin.html",
-                    gerant:  "gerant.html",
-                    employe: "index.html"
-                };
-                window.location.href = redirections[s.role] || "index.html";
-            }
-        } catch {}
-    })();
-
-    /* ── Connexion ── */
-    async function doLogin() {
-        const email    = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-        const btn      = document.getElementById("btn-login");
-        const label    = document.getElementById("btn-label");
-        const msg      = document.getElementById("msg");
-
-        msg.className   = "msg";
-        msg.textContent = "";
-
-        if (!email || !password) {
-            showMsg("error", "Veuillez remplir tous les champs.");
-            return;
-        }
-
-        btn.disabled = true;
-        label.innerHTML = `<span class="spinner"></span> Connexion…`;
-
-        try {
-            const res = await fetch("/.netlify/functions/auth-login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || data.error) {
-                throw new Error(data.error || "Identifiants incorrects");
-            }
-
-            /* Sauvegarder dans localStorage (persiste entre les pages)
-               ET sessionStorage (compatibilité avec app.js existant) */
-            const sessionData = {
-                token:   data.token,
-                userId:  data.userId,
-                email:   data.email,
-                nom:     data.nom,
-                role:    data.role,
-                expires: data.expires
-            };
-            localStorage.setItem("aqua_session",   JSON.stringify(sessionData));
-            sessionStorage.setItem("aqua_session",  JSON.stringify(sessionData));
-
-            showMsg("success", `Bienvenue, ${data.nom} ! Redirection…`);
-
-            setTimeout(() => {
-                const redirections = {
-                    admin:   "admin.html",
-                    gerant:  "gerant.html",
-                    employe: "index.html"
-                };
-                window.location.href = redirections[data.role] || "index.html";
-            }, 900);
-
-        } catch (err) {
-            showMsg("error", "❌ " + err.message);
-            btn.disabled = false;
-            label.textContent = "Se connecter";
-        }
-    }
-
-    function showMsg(type, text) {
-        const msg = document.getElementById("msg");
-        msg.className   = "msg " + type;
-        msg.textContent = text;
-    }
-
-    /* Connexion au Enter */
-    document.addEventListener("keydown", e => {
-        if (e.key === "Enter") doLogin();
-    });
+(function(){
+  try{
+    var raw=localStorage.getItem("aqua_session")||sessionStorage.getItem("aqua_session");
+    if(!raw)return;
+    var s=JSON.parse(raw);
+    if(s&&s.token&&s.role){var map={super_admin:"superadmin.html",admin:"admin.html",gerant:"gerant.html",employe:"index.html"};window.location.href=map[s.role]||"index.html";}
+  }catch(e){}
+})();
+async function doLogin(){
+  var email=document.getElementById("email").value.trim();
+  var password=document.getElementById("password").value;
+  var btn=document.getElementById("btn"),label=document.getElementById("btn-label");
+  document.getElementById("msg").className="msg";
+  if(!email||!password){showMsg("err","Veuillez remplir tous les champs.");return;}
+  btn.disabled=true; label.innerHTML='<span class="spinner"></span> Connexion...';
+  try{
+    var res=await fetch("/.netlify/functions/auth-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,password:password})});
+    var data=await res.json();
+    if(!res.ok||data.error) throw new Error(data.error||"Identifiants incorrects");
+    var session={token:data.token,userId:data.userId,email:data.email,nom:data.nom,role:data.role,tenant_id:data.tenant_id,tenant_nom:data.tenant_nom,tenant_plan:data.tenant_plan,expires:data.expires};
+    localStorage.setItem("aqua_session",JSON.stringify(session));
+    sessionStorage.setItem("aqua_session",JSON.stringify(session));
+    showMsg("ok","Bienvenue "+data.nom+" ! Redirection...");
+    setTimeout(function(){var map={super_admin:"superadmin.html",admin:"admin.html",gerant:"gerant.html",employe:"index.html"};window.location.href=map[data.role]||"index.html";},800);
+  }catch(err){
+    showMsg("err","Erreur : "+err.message);
+    btn.disabled=false; label.textContent="Se connecter";
+  }
+}
+function showMsg(type,text){var m=document.getElementById("msg");m.className="msg "+type;m.textContent=text;}
+document.addEventListener("keydown",function(e){if(e.key==="Enter")doLogin();});
 </script>
 </body>
 </html>

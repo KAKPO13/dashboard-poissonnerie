@@ -1,193 +1,66 @@
-/**
- * Netlify Function : mouvements
- * Gère les mouvements de stock
- *
- * ENTRÉE  → ajoute à produits_cf (chambre froide)
- * SORTIE  → retire de produits_cf ET ajoute à produits_employe
- *
- * GET  → liste des mouvements
- * POST → enregistre un mouvement
- */
-
-function json(code, data) {
-    return {
-        statusCode: code,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify(data)
-    };
-}
-
-async function sbRead(res) {
-    const t = await res.text();
-    if (!t || !t.trim()) return null;
-    try { return JSON.parse(t); } catch { return { _raw: t.slice(0, 300) }; }
-}
-
-async function verifierToken(event, URL, KEY) {
-    const auth = (event.headers.authorization || event.headers.Authorization || "")
-        .replace("Bearer ", "").trim();
-    if (!auth) throw new Error("Token manquant");
-    const r  = await fetch(`${URL}/auth/v1/user`, { headers: { apikey: KEY, Authorization: `Bearer ${auth}` } });
-    const u  = await sbRead(r);
-    if (!r.ok || !u?.id) throw new Error("Token invalide");
-    const pr = await fetch(`${URL}/rest/v1/utilisateurs?id=eq.${u.id}&select=role,nom,actif&limit=1`,
-        { headers: { apikey: KEY, Authorization: `Bearer ${auth}` } });
-    const p  = await sbRead(pr);
-    if (!Array.isArray(p) || !p[0]) throw new Error("Profil introuvable");
-    if (!p[0].actif) throw new Error("Compte désactivé");
-    if (!["gerant", "admin"].includes(p[0].role)) throw new Error("Accès réservé aux gérants");
-    return { userId: u.id, role: p[0].role, nom: p[0].nom };
-}
+import { jsonResp, corsResp, readBody, parseBody, verifyToken } from './_helpers.js';
 
 export async function handler(event) {
-    if (event.httpMethod === "OPTIONS") {
-        return { statusCode: 200, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type,Authorization" }, body: "" };
-    }
+    if (event.httpMethod === "OPTIONS") return corsResp();
+    var URL = process.env.SUPABASE_URL;
+    var SVC = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+    if (!URL) return jsonResp(500,{error:"Configuration manquante"});
 
-    const URL = process.env.SUPABASE_URL;
-    const KEY = process.env.SUPABASE_KEY;
-    const SVC = process.env.SUPABASE_SERVICE_KEY || KEY;
-    if (!URL || !KEY) return json(500, { error: "Configuration manquante" });
-
-    let user;
-    try { user = await verifierToken(event, URL, KEY); }
-    catch (e) { return json(403, { error: e.message }); }
-
-    const h = { apikey: SVC, Authorization: `Bearer ${SVC}`, "Content-Type": "application/json" };
+    var user;
+    try { user = await verifyToken(event,["gerant","admin","super_admin"]); } catch(e) { return jsonResp(e.code||403,{error:e.message}); }
+    var h = { apikey:SVC, Authorization:"Bearer "+SVC, "Content-Type":"application/json" };
+    var tenantId=user.tenantId, userId=user.userId;
 
     try {
-
-        // ════ GET : liste des mouvements ════
-        if (event.httpMethod === "GET") {
-            const params = event.queryStringParameters || {};
-            let query = `${URL}/rest/v1/v_mouvements_detail?order=created_at.desc`;
-            if (params.limit) query += `&limit=${parseInt(params.limit)}`;
-            if (params.type)  query += `&type=eq.${params.type}`;
-            const r = await fetch(query, { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } });
-            const data = await sbRead(r);
-            return json(r.ok ? 200 : 500, r.ok ? (data || []) : { error: "Erreur" });
+        if (event.httpMethod==="GET") {
+            var params=event.queryStringParameters||{};
+            var q=URL+"/rest/v1/v_mouvements_detail?tenant_id=eq."+tenantId+"&order=created_at.desc";
+            if (params.limit) q+="&limit="+parseInt(params.limit);
+            if (params.type)  q+="&type=eq."+params.type;
+            var r = await fetch(q,{headers:{apikey:SVC,Authorization:"Bearer "+SVC}});
+            return jsonResp(r.ok?200:500, await readBody(r)||[]);
         }
 
-        // ════ POST : enregistrer un mouvement ════
-        if (event.httpMethod === "POST") {
-            let body;
-            try { body = JSON.parse(event.body || "{}"); } catch { return json(400, { error: "Corps invalide" }); }
+        if (event.httpMethod==="POST") {
+            var body; try { body=parseBody(event); } catch(e) { return jsonResp(400,{error:e.message}); }
+            var produit_id=body.produit_id,type=body.type,quantite=body.quantite,prix_achat_kg=body.prix_achat_kg,employe_id=body.employe_id,employe_nom=body.employe_nom,note=body.note;
 
-            const { produit_id, type, quantite, prix_achat_kg, employe_id, employe_nom, note } = body;
+            if (!produit_id) return jsonResp(400,{error:"produit_id requis"});
+            if (["entree","sortie","ajustement"].indexOf(type)===-1) return jsonResp(400,{error:"type invalide"});
+            if (!quantite||Number(quantite)<=0) return jsonResp(400,{error:"quantite > 0 requis"});
+            if (type==="sortie"&&!employe_id) return jsonResp(400,{error:"employe_id requis pour une sortie"});
+            var qty=Number(quantite);
 
-            if (!produit_id) return json(400, { error: "produit_id requis" });
-            if (!["entree", "sortie", "ajustement"].includes(type))
-                return json(400, { error: "type requis : entree, sortie ou ajustement" });
-            if (!quantite || Number(quantite) <= 0)
-                return json(400, { error: "quantite > 0 requis" });
-            if (type === "sortie" && !employe_id)
-                return json(400, { error: "employe_id requis pour une sortie" });
+            var cfR = await fetch(URL+"/rest/v1/produits_cf?id=eq."+produit_id+"&tenant_id=eq."+tenantId+"&select=id,nom,reference,quantite,prix_vente_kg&limit=1",{headers:{apikey:SVC,Authorization:"Bearer "+SVC}});
+            var cfRows = await readBody(cfR);
+            if (!Array.isArray(cfRows)||!cfRows[0]) return jsonResp(404,{error:"Produit chambre froide introuvable"});
+            var prod=cfRows[0], stockCF=Number(prod.quantite||0);
+            if (type==="sortie"&&stockCF<qty) return jsonResp(400,{error:"Stock insuffisant. Disponible : "+stockCF+" kg, demande : "+qty+" kg"});
 
-            const qty = Number(quantite);
+            var mvtData={tenant_id:tenantId,produit_id:Number(produit_id),type:type,quantite:qty,note:note||null,created_by:userId};
+            if (type==="entree"&&prix_achat_kg) mvtData.prix_achat_kg=Number(prix_achat_kg);
+            if (type==="sortie") { mvtData.employe_id=employe_id; mvtData.employe_nom=employe_nom||null; }
 
-            // ── Lire le produit dans produits_cf ──
-            const cfRes = await fetch(
-                `${URL}/rest/v1/produits_cf?id=eq.${produit_id}&select=id,nom,reference,quantite,prix_vente_kg&limit=1`,
-                { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } }
-            );
-            const cfRows = await sbRead(cfRes);
-            if (!Array.isArray(cfRows) || !cfRows[0])
-                return json(404, { error: "Produit chambre froide introuvable" });
+            var mR = await fetch(URL+"/rest/v1/mouvements_stock",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},h),body:JSON.stringify(mvtData)});
+            if (!mR.ok) { var me=await readBody(mR); return jsonResp(mR.status,{error:(me&&me.message)||"Erreur mouvement"}); }
 
-            const produitCF = cfRows[0];
-            const stockCF   = Number(produitCF.quantite || 0);
+            var delta=type==="entree"?qty:-qty;
+            var newQtyCF=Math.max(0,stockCF+delta);
+            var patchCF={quantite:newQtyCF,updated_at:new Date().toISOString()};
+            if (type==="entree"&&prix_achat_kg) patchCF.prix_achat_kg=Number(prix_achat_kg);
+            await fetch(URL+"/rest/v1/produits_cf?id=eq."+produit_id+"&tenant_id=eq."+tenantId,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},h),body:JSON.stringify(patchCF)});
 
-            // ── Vérifier stock suffisant pour sortie ──
-            if (type === "sortie" && stockCF < qty) {
-                return json(400, {
-                    error: `Stock chambre froide insuffisant. Disponible : ${stockCF} kg, demandé : ${qty} kg`
-                });
-            }
-
-            // ── 1. Insérer le mouvement ──
-            const mvtData = {
-                produit_id:  Number(produit_id),
-                type, quantite: qty,
-                note: note || null,
-                created_by: user.userId,
-            };
-            if (type === "entree" && prix_achat_kg) mvtData.prix_achat_kg = Number(prix_achat_kg);
-            if (type === "sortie") { mvtData.employe_id = employe_id; mvtData.employe_nom = employe_nom || null; }
-
-            const mvtRes = await fetch(`${URL}/rest/v1/mouvements_stock`, {
-                method: "POST",
-                headers: { ...h, Prefer: "return=minimal" },
-                body: JSON.stringify(mvtData)
-            });
-            if (!mvtRes.ok) {
-                const err = await sbRead(mvtRes);
-                return json(mvtRes.status, { error: err?.message || "Erreur insertion mouvement" });
-            }
-
-            // ── 2. Mettre à jour produits_cf (chambre froide) ──
-            const delta     = type === "entree" ? qty : -qty;
-            const newQtyCF  = Math.max(0, stockCF + delta);
-            const patchCF   = { quantite: newQtyCF, updated_at: new Date().toISOString() };
-            if (type === "entree" && prix_achat_kg) patchCF.prix_achat_kg = Number(prix_achat_kg);
-
-            await fetch(`${URL}/rest/v1/produits_cf?id=eq.${produit_id}`, {
-                method: "PATCH",
-                headers: { ...h, Prefer: "return=minimal" },
-                body: JSON.stringify(patchCF)
-            });
-
-            // ── 3. Si SORTIE → mettre à jour produits_employe ──
-            if (type === "sortie") {
-                // Chercher si une ligne existe déjà pour (employe, produit)
-                const peRes = await fetch(
-                    `${URL}/rest/v1/produits_employe?employe_id=eq.${employe_id}&produit_cf_id=eq.${produit_id}&select=id,quantite&limit=1`,
-                    { headers: { apikey: SVC, Authorization: `Bearer ${SVC}` } }
-                );
-                const peRows = await sbRead(peRes);
-
-                if (Array.isArray(peRows) && peRows.length > 0) {
-                    // Incrémenter le stock existant
-                    const newQtyEmp = Number(peRows[0].quantite || 0) + qty;
-                    await fetch(
-                        `${URL}/rest/v1/produits_employe?employe_id=eq.${employe_id}&produit_cf_id=eq.${produit_id}`,
-                        {
-                            method: "PATCH",
-                            headers: { ...h, Prefer: "return=minimal" },
-                            body: JSON.stringify({ quantite: newQtyEmp, updated_at: new Date().toISOString() })
-                        }
-                    );
+            if (type==="sortie") {
+                var peR = await fetch(URL+"/rest/v1/produits_employe?employe_id=eq."+employe_id+"&produit_cf_id=eq."+produit_id+"&select=id,quantite&limit=1",{headers:{apikey:SVC,Authorization:"Bearer "+SVC}});
+                var peRows=await readBody(peR);
+                if (Array.isArray(peRows)&&peRows.length>0) {
+                    await fetch(URL+"/rest/v1/produits_employe?employe_id=eq."+employe_id+"&produit_cf_id=eq."+produit_id,{method:"PATCH",headers:Object.assign({Prefer:"return=minimal"},h),body:JSON.stringify({quantite:Number(peRows[0].quantite||0)+qty,updated_at:new Date().toISOString()})});
                 } else {
-                    // Créer une nouvelle ligne dans produits_employe
-                    await fetch(`${URL}/rest/v1/produits_employe`, {
-                        method: "POST",
-                        headers: { ...h, Prefer: "return=minimal" },
-                        body: JSON.stringify({
-                            employe_id,
-                            produit_cf_id: Number(produit_id),
-                            nom:           produitCF.nom,
-                            reference:     produitCF.reference || null,
-                            quantite:      qty,
-                            prix_vente_kg: produitCF.prix_vente_kg || null,
-                            updated_at:    new Date().toISOString()
-                        })
-                    });
+                    await fetch(URL+"/rest/v1/produits_employe",{method:"POST",headers:Object.assign({Prefer:"return=minimal"},h),body:JSON.stringify({tenant_id:tenantId,employe_id:employe_id,produit_cf_id:Number(produit_id),nom:prod.nom,reference:prod.reference||null,quantite:qty,prix_vente_kg:prod.prix_vente_kg||null,updated_at:new Date().toISOString()})});
                 }
             }
-
-            return json(201, {
-                success:          true,
-                stock_cf_restant: newQtyCF,
-                type,
-                quantite:         qty
-            });
+            return jsonResp(201,{success:true,stock_cf_restant:newQtyCF});
         }
-
-        return json(405, { error: "Méthode non autorisée" });
-
-    } catch (err) {
-        console.error("[mouvements]", err.message);
-        return json(500, { error: err.message });
-    }
+        return jsonResp(405,{error:"Methode non autorisee"});
+    } catch(err) { console.error("[mouvements]",err.message); return jsonResp(500,{error:err.message}); }
 }
-
-
