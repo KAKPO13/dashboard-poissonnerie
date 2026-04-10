@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AquaDash - Mon profil</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFFBF5;--s1:#FFF;--s2:#FFF5ED;--border:#E8E0D8;--b2:rgba(255,107,26,.2);--orange:#FF6B1A;--odk:#E05510;--olt:#FFF0E8;--t1:#1A1A1A;--t2:#888880;--green:#2E7D32;--gbg:#EDF7ED;--red:#A32D2D;--rbg:#FCEBEB;--amber:#BA7517;--abg:#FAEEDA;--blue:#185FA5;--bbg:#E6F1FB;--r:14px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+.wrap{max-width:700px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:38px;height:38px;background:var(--orange);border-radius:10px;display:grid;place-items:center;font-size:18px}
+.logo h1{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800}
+.logo h1 span{color:var(--orange)}
+.btn-h{background:var(--s1);border:1.5px solid var(--border);border-radius:9px;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:.76rem;padding:6px 12px;cursor:pointer;transition:all .2s}
+.btn-h:hover{border-color:var(--orange);color:var(--orange)}
+.card{background:var(--s1);border:1.5px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:16px}
+.card-title{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.avatar{width:64px;height:64px;border-radius:50%;background:var(--orange);display:grid;place-items:center;font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#fff;margin:0 auto 16px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--s2)}
+.info-row:last-child{border:none}
+.info-label{font-size:.78rem;color:var(--t2)}
+.info-value{font-size:.88rem;font-weight:500}
+.role-pill{font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px}
+.role-pill.admin{background:var(--abg);color:var(--amber);border:1px solid rgba(186,117,23,.25)}
+.role-pill.gerant{background:var(--bbg);color:var(--blue);border:1px solid rgba(24,95,165,.25)}
+.role-pill.employe{background:var(--olt);color:var(--orange);border:1px solid var(--b2)}
+.role-pill.super_admin{background:#f3f0ff;color:#7c3aed;border:1px solid rgba(124,58,237,.25)}
+.plan-badge{display:inline-flex;align-items:center;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px}
+.plan-badge.free{background:var(--gbg);color:var(--green)}.plan-badge.pro{background:var(--bbg);color:var(--blue)}.plan-badge.enterprise{background:var(--abg);color:var(--amber)}
+.progress-bar{height:6px;background:var(--s2);border-radius:4px;margin-top:4px;overflow:hidden}
+.progress-fill{height:100%;background:var(--orange);border-radius:4px;transition:width .5s}
+.progress-fill.warn{background:var(--amber)}.progress-fill.full{background:var(--red)}
+.ff{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.ff label{font-size:.74rem;font-weight:500;color:var(--t2);text-transform:uppercase;letter-spacing:.03em}
+.ff input{background:var(--s2);border:1.5px solid var(--border);border-radius:9px;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:.88rem;padding:10px 13px;outline:none;transition:border-color .2s}
+.ff input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,107,26,.1)}
+.btn-o{background:var(--orange);border:none;border-radius:9px;color:#fff;font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;padding:10px 20px;cursor:pointer;transition:background .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-o:hover{background:var(--odk)}.btn-o:disabled{opacity:.4;cursor:not-allowed}
+.msg{display:none;margin-top:12px;padding:10px 14px;border-radius:9px;font-size:.82rem;font-weight:500;align-items:center;gap:8px}
+.msg.ok{display:flex;background:var(--gbg);color:var(--green);border:1.5px solid rgba(46,125,50,.2)}
+.msg.err{display:flex;background:var(--rbg);color:var(--red);border:1.5px solid rgba(163,45,45,.2)}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.empty{padding:24px;text-align:center;color:var(--t2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><div class="logo-icon">🐟</div><h1>Aqua<span>Dash</span> – Mon profil</h1></div>
+    <button class="btn-h" onclick="history.back()">← Retour</button>
+  </header>
+
+  <!-- INFOS -->
+  <div class="card" id="card-infos">
+    <div class="empty">Chargement...</div>
+  </div>
+
+  <!-- UTILISATION PLAN -->
+  <div class="card" id="card-plan" style="display:none">
+    <div class="card-title">📊 Utilisation du plan</div>
+    <div id="zone-plan"></div>
+  </div>
+
+  <!-- MODIFIER NOM -->
+  <div class="card">
+    <div class="card-title">✏️ Modifier mon nom</div>
+    <div class="ff"><label>Nouveau nom</label><input id="new-nom" type="text" placeholder="Votre nom complet"/></div>
+    <button class="btn-o" id="btn-nom" onclick="saveNom()">Enregistrer</button>
+    <div class="msg" id="msg-nom"></div>
+  </div>
+
+  <!-- CHANGER MOT DE PASSE -->
+  <div class="card">
+    <div class="card-title">🔒 Changer mon mot de passe</div>
+    <div class="ff"><label>Nouveau mot de passe</label><input id="new-pass" type="password" placeholder="Min 8 caracteres"/></div>
+    <div class="ff"><label>Confirmer le mot de passe</label><input id="confirm-pass" type="password" placeholder="Confirmer..."/></div>
+    <button class="btn-o" id="btn-pass" onclick="savePass()">Changer le mot de passe</button>
+    <div class="msg" id="msg-pass"></div>
+  </div>
+
+  <!-- DECONNEXION -->
+  <div style="text-align:center;margin-top:8px">
+    <button onclick="Auth.logout()" style="background:none;border:1.5px solid var(--border);border-radius:9px;color:var(--red);font-family:DM Sans,sans-serif;font-size:.84rem;padding:9px 20px;cursor:pointer;transition:all .2s">Se deconnecter</button>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script>
+var session = Auth.requireAuth();
+var fmt = function(n){return Number(n||0).toLocaleString("fr-FR");};
+var esc = function(s){return String(s||"").replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});};
+
+async function loadProfil(){
+  try{
+    var data = await API.get("profil");
+    var p = data.profil||{};
+    var t = data.tenant;
+    var u = data.utilisation;
+    var lim = data.limites;
+
+    var initiales=(p.nom||p.email||"U").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+    document.getElementById("new-nom").value = p.nom||"";
+
+    var planHtml=t?'<span class="plan-badge '+t.plan+'">'+t.plan+'</span>':"";
+    document.getElementById("card-infos").innerHTML='<div class="card-title">👤 Mon compte</div>'
+      +'<div style="text-align:center;margin-bottom:16px"><div class="avatar">'+initiales+'</div></div>'
+      +'<div class="info-row"><span class="info-label">Nom</span><span class="info-value">'+esc(p.nom||"-")+'</span></div>'
+      +'<div class="info-row"><span class="info-label">Email</span><span class="info-value">'+esc(p.email||"-")+'</span></div>'
+      +'<div class="info-row"><span class="info-label">Role</span><span class="role-pill '+p.role+'">'+p.role+'</span></div>'
+      +(t?'<div class="info-row"><span class="info-label">Societe</span><span class="info-value">'+esc(t.nom)+'</span></div>':'')
+      +(t?'<div class="info-row"><span class="info-label">Plan</span>'+planHtml+'</div>':'');
+
+    if (t && u && lim) {
+      document.getElementById("card-plan").style.display="block";
+      var mkBar=function(label,used,max){
+        var pct=max===-1?0:Math.min(100,Math.round((used/max)*100));
+        var cls=pct>=100?"full":pct>=80?"warn":"";
+        var maxLabel=max===-1?"Illimite":max;
+        return '<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px"><span>'+label+'</span><span style="color:var(--t2)">'+used+' / '+maxLabel+'</span></div>'+(max!==-1?'<div class="progress-bar"><div class="progress-fill '+cls+'" style="width:'+pct+'%"></div></div>':'')+'</div>';
+      };
+      document.getElementById("zone-plan").innerHTML=mkBar("Gerants",u.gerants,lim.max_gerants)+mkBar("Employes",u.employes,lim.max_employes)+mkBar("Produits",u.produits,lim.max_produits);
+    }
+  }catch(err){
+    document.getElementById("card-infos").innerHTML='<div class="empty" style="color:var(--red)">Erreur : '+err.message+'</div>';
+  }
+}
+
+async function saveNom(){
+  var nom=document.getElementById("new-nom").value.trim();
+  if(!nom){UI.showMsg("msg-nom","err","Entrez votre nom.");return;}
+  var btn=document.getElementById("btn-nom"); btn.disabled=true; btn.innerHTML='<span class="spinner"></span>...';
+  try{
+    await API.patch("profil",{nom:nom});
+    var s=Auth.getSession(); if(s){s.nom=nom;Auth.setSession(s);}
+    UI.showMsg("msg-nom","ok","Nom mis a jour !");
+    await loadProfil();
+  }catch(err){UI.showMsg("msg-nom","err","Erreur : "+err.message);}
+  btn.disabled=false; btn.textContent="Enregistrer";
+}
+
+async function savePass(){
+  var p1=document.getElementById("new-pass").value, p2=document.getElementById("confirm-pass").value;
+  if(p1.length<8){UI.showMsg("msg-pass","err","Minimum 8 caracteres.");return;}
+  if(p1!==p2){UI.showMsg("msg-pass","err","Les mots de passe ne correspondent pas.");return;}
+  var btn=document.getElementById("btn-pass"); btn.disabled=true; btn.innerHTML='<span class="spinner"></span>...';
+  try{
+    await API.patch("profil",{password:p1});
+    UI.showMsg("msg-pass","ok","Mot de passe change !");
+    document.getElementById("new-pass").value=""; document.getElementById("confirm-pass").value="";
+  }catch(err){UI.showMsg("msg-pass","err","Erreur : "+err.message);}
+  btn.disabled=false; btn.textContent="Changer le mot de passe";
+}
+
+loadProfil();
+</script>
+</body>
+</html>

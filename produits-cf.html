@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AquaDash - Produits Chambre Froide</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F0FDF4;--s1:#FFF;--s2:#F0FDF4;--border:#BBF7D0;--b2:rgba(34,197,94,.25);--green:#16A34A;--gdk:#15803D;--glt:#DCFCE7;--t1:#1A1A1A;--t2:#6B7280;--t3:#D1D5DB;--orange:#EA580C;--obg:#FFF7ED;--red:#DC2626;--rbg:#FEF2F2;--amber:#D97706;--abg:#FFFBEB;--blue:#2563EB;--bbg:#EFF6FF;--r:12px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:38px;height:38px;background:var(--green);border-radius:10px;display:grid;place-items:center;font-size:18px}
+.logo h1{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800}
+.logo h1 span{color:var(--green)}
+.hright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn-h{background:var(--s1);border:1.5px solid var(--border);border-radius:9px;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:.76rem;padding:6px 12px;cursor:pointer;transition:all .2s}
+.btn-h:hover{border-color:var(--green);color:var(--green)}
+.btn-g{background:var(--green);border:none;border-radius:9px;color:#fff;font-family:'Syne',sans-serif;font-size:.86rem;font-weight:700;padding:9px 18px;cursor:pointer;transition:background .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-g:hover{background:var(--gdk)}
+.card{background:var(--s1);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.ct{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:14px;background:var(--glt)}
+.tbl{width:100%;border-collapse:collapse}
+.tbl thead tr{border-bottom:1px solid var(--border)}
+.tbl th{text-align:left;font-size:.68rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px 10px;white-space:nowrap}
+.tbl tbody tr{border-bottom:1px solid rgba(0,0,0,.04);transition:background .15s}
+.tbl tbody tr:hover{background:var(--s2)}
+.tbl tbody tr:last-child{border:none}
+.tbl td{padding:10px 12px;font-size:.83rem;vertical-align:middle}
+.bdg{display:inline-flex;align-items:center;font-size:.67rem;font-weight:700;padding:3px 9px;border-radius:20px}
+.bdg.gr{background:var(--glt);color:var(--green)}.bdg.re{background:var(--rbg);color:var(--red)}.bdg.am{background:var(--abg);color:var(--amber)}
+.btn-sm{background:var(--s2);border:1.5px solid var(--border);border-radius:7px;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:.74rem;padding:4px 10px;cursor:pointer;transition:all .15s}
+.btn-sm:hover{border-color:var(--green);color:var(--green)}
+.btn-sm.re{border-color:rgba(220,38,38,.2);color:var(--red)}.btn-sm.re:hover{background:var(--rbg)}
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;place-items:center}
+.overlay.open{display:grid}
+.modal{background:var(--s1);border-radius:16px;padding:28px;width:100%;max-width:480px;margin:20px;max-height:90vh;overflow-y:auto}
+.modal h2{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:20px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+@media(max-width:500px){.fg{grid-template-columns:1fr}}
+.ff{display:flex;flex-direction:column;gap:5px}.ff.full{grid-column:1/-1}
+.ff label{font-size:.72rem;font-weight:500;color:var(--t2);text-transform:uppercase;letter-spacing:.03em}
+.ff input,.ff textarea,.ff select{background:var(--s2);border:1.5px solid var(--border);border-radius:9px;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:.86rem;padding:9px 12px;outline:none;transition:border-color .2s;width:100%}
+.ff input:focus,.ff textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(22,163,74,.1)}
+.ff textarea{resize:vertical;min-height:60px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
+.btn-cancel{background:var(--s2);border:1.5px solid var(--border);border-radius:9px;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:.86rem;padding:9px 18px;cursor:pointer;transition:all .2s}
+.btn-cancel:hover{border-color:var(--red);color:var(--red)}
+.msg{display:none;margin-top:12px;padding:10px 14px;border-radius:9px;font-size:.82rem;font-weight:500;align-items:center;gap:8px}
+.msg.ok{display:flex;background:var(--glt);color:var(--green);border:1.5px solid rgba(22,163,74,.2)}
+.msg.err{display:flex;background:var(--rbg);color:var(--red);border:1.5px solid rgba(220,38,38,.2)}
+.search-bar{background:var(--s2);border:1.5px solid var(--border);border-radius:9px;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:.86rem;padding:9px 13px;outline:none;transition:border-color .2s;width:100%;margin-bottom:14px}
+.search-bar:focus{border-color:var(--green)}
+.search-bar::placeholder{color:var(--t2)}
+.empty{padding:24px;text-align:center;color:var(--t2);font-size:.83rem}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><div class="logo-icon">🧊</div><h1>Aqua<span>Dash</span> – Produits CF</h1></div>
+    <div class="hright">
+      <button class="btn-h" onclick="history.back()">← Retour</button>
+      <button class="btn-g" onclick="openModal()">+ Nouveau produit</button>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="ch">
+      <div class="ct"><div class="ic">🧊</div>Catalogue chambre froide</div>
+      <span id="count" style="font-size:.78rem;color:var(--t2)">...</span>
+    </div>
+    <input type="text" class="search-bar" id="search" placeholder="Rechercher par nom ou reference..." oninput="filterTable()"/>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Produit</th><th>Ref.</th><th>Stock (kg)</th><th>Prix achat/kg</th><th>Prix vente/kg</th><th>Expiration</th><th>Statut</th><th>Actions</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="8" class="empty"><span class="spinner"></span>Chargement...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="msg" id="msg-main"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="closeOnBg(event)">
+  <div class="modal" id="modal">
+    <h2 id="modal-title">Nouveau produit</h2>
+    <input type="hidden" id="edit-id"/>
+    <div class="fg">
+      <div class="ff full"><label>Nom du produit *</label><input id="f-nom" type="text" placeholder="Ex : Tilapia"/></div>
+      <div class="ff"><label>Reference</label><input id="f-ref" type="text" placeholder="Ex : TIL-001"/></div>
+      <div class="ff"><label>Quantite initiale (kg)</label><input id="f-qty" type="number" placeholder="0" min="0" step="0.1"/></div>
+      <div class="ff"><label>Prix achat / kg (FCFA)</label><input id="f-achat" type="number" placeholder="0" min="0"/></div>
+      <div class="ff"><label>Prix vente / kg (FCFA)</label><input id="f-vente" type="number" placeholder="0" min="0"/></div>
+      <div class="ff"><label>Date arrivee</label><input id="f-arrivee" type="date"/></div>
+      <div class="ff"><label>Date expiration</label><input id="f-exp" type="date"/></div>
+      <div class="ff full"><label>Description</label><textarea id="f-desc" placeholder="Notes..."></textarea></div>
+    </div>
+    <div class="msg" id="msg-modal"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-g" id="btn-save" onclick="saveProduit()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script>
+var session = Auth.requireAuth();
+if (session && !["gerant","admin","super_admin"].includes(session.role)) window.location.href = "index.html";
+
+var ALL = [];
+var fmt = function(n){return Number(n||0).toLocaleString("fr-FR");};
+var fmtD = function(iso){return iso?new Date(iso).toLocaleDateString("fr-FR"):"-";};
+var esc = function(s){return String(s||"").replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});};
+
+async function load(){
+  try{
+    ALL = await API.get("produits");
+    document.getElementById("count").textContent = ALL.length+" produit(s)";
+    renderTable(ALL);
+  }catch(err){
+    document.getElementById("tbody").innerHTML='<tr><td colspan="8" class="empty" style="color:var(--red)">Erreur : '+err.message+'</td></tr>';
+  }
+}
+
+function renderTable(list){
+  var tb=document.getElementById("tbody");
+  if(!list.length){tb.innerHTML='<tr><td colspan="8" class="empty">Aucun produit</td></tr>';return;}
+  var today=new Date(); today.setHours(0,0,0,0);
+  tb.innerHTML=list.map(function(p){
+    var qty=Number(p.quantite||0);
+    var exp=p.date_expiration?new Date(p.date_expiration):null;
+    if(exp) exp.setHours(0,0,0,0);
+    var diff=exp?((exp-today)/86400000):null;
+    var statut='<span class="bdg gr">OK</span>';
+    if(qty===0)statut='<span class="bdg re">Epuise</span>';
+    else if(qty<5)statut='<span class="bdg am">Bas</span>';
+    if(diff!==null&&diff<0)statut='<span class="bdg re">Expire</span>';
+    else if(diff!==null&&diff<=1)statut='<span class="bdg am">Bientot</span>';
+    return '<tr>'
+      +'<td><strong>'+esc(p.nom)+'</strong></td>'
+      +'<td style="color:var(--t2)">'+esc(p.reference||"-")+'</td>'
+      +'<td><strong style="color:var(--green)">'+fmt(qty)+' kg</strong></td>'
+      +'<td>'+(p.prix_achat_kg?fmt(p.prix_achat_kg)+" FCFA":"-")+'</td>'
+      +'<td>'+(p.prix_vente_kg?fmt(p.prix_vente_kg)+" FCFA":"-")+'</td>'
+      +'<td>'+(exp?exp.toLocaleDateString("fr-FR"):"-")+'</td>'
+      +'<td>'+statut+'</td>'
+      +'<td style="display:flex;gap:6px"><button class="btn-sm" onclick="editProduit('+p.id+')">Modifier</button><button class="btn-sm re" onclick="deleteProduit('+p.id+',\''+esc(p.nom)+'\')">Suppr.</button></td>'
+      +'</tr>';
+  }).join("");
+}
+
+function filterTable(){
+  var q=document.getElementById("search").value.toLowerCase();
+  if(!q){renderTable(ALL);return;}
+  renderTable(ALL.filter(function(p){return (p.nom||"").toLowerCase().includes(q)||(p.reference||"").toLowerCase().includes(q);}));
+}
+
+function openModal(p){
+  document.getElementById("modal-title").textContent=p?"Modifier le produit":"Nouveau produit";
+  document.getElementById("edit-id").value=p?p.id:"";
+  document.getElementById("f-nom").value=p?p.nom:"";
+  document.getElementById("f-ref").value=p?(p.reference||""):"";
+  document.getElementById("f-qty").value=p?p.quantite:"";
+  document.getElementById("f-achat").value=p?(p.prix_achat_kg||""):"";
+  document.getElementById("f-vente").value=p?(p.prix_vente_kg||""):"";
+  document.getElementById("f-arrivee").value=p?(p.date_arrivee||""):"";
+  document.getElementById("f-exp").value=p?(p.date_expiration||""):"";
+  document.getElementById("f-desc").value=p?(p.description||""):"";
+  document.getElementById("msg-modal").className="msg";
+  document.getElementById("overlay").classList.add("open");
+}
+
+function editProduit(id){
+  var p=ALL.find(function(x){return x.id===id;});
+  if(p) openModal(p);
+}
+
+function closeModal(){document.getElementById("overlay").classList.remove("open");}
+function closeOnBg(e){if(e.target===document.getElementById("overlay"))closeModal();}
+
+async function saveProduit(){
+  var id=document.getElementById("edit-id").value;
+  var nom=document.getElementById("f-nom").value.trim();
+  var btn=document.getElementById("btn-save");
+  UI.clearMsg("msg-modal");
+  if(!nom){UI.showMsg("msg-modal","err","Le nom est obligatoire.");return;}
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>...';
+  var data={
+    nom:nom,
+    reference:document.getElementById("f-ref").value.trim()||null,
+    quantite:Number(document.getElementById("f-qty").value||0),
+    prix_achat_kg:document.getElementById("f-achat").value?Number(document.getElementById("f-achat").value):null,
+    prix_vente_kg:document.getElementById("f-vente").value?Number(document.getElementById("f-vente").value):null,
+    date_arrivee:document.getElementById("f-arrivee").value||null,
+    date_expiration:document.getElementById("f-exp").value||null,
+    description:document.getElementById("f-desc").value.trim()||null
+  };
+  try{
+    if(id){ data.id=id; await API.patch("produits",data); }
+    else { await API.post("produits",data); }
+    closeModal(); await load();
+    UI.showMsg("msg-main","ok",id?"Produit modifie.":"Produit ajoute.");
+  }catch(err){UI.showMsg("msg-modal","err","Erreur : "+err.message);}
+  btn.disabled=false; btn.textContent="Enregistrer";
+}
+
+async function deleteProduit(id, nom){
+  if(!confirm("Supprimer '"+nom+"' ? Cette action est irreversible."))return;
+  try{
+    await API.call("produits?id="+id,{method:"DELETE"});
+    await load();
+    UI.showMsg("msg-main","ok","Produit supprime.");
+  }catch(err){UI.showMsg("msg-main","err","Erreur : "+err.message);}
+}
+
+load();
+</script>
+</body>
+</html>
