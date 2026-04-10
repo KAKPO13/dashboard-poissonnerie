@@ -1,566 +1,301 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>AquaDash – Administration</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg:       #0d1117;
-            --surface:  #161b22;
-            --surface2: #1e2530;
-            --border:   rgba(255,255,255,0.08);
-            --accent:   #00c9a7;
-            --accent2:  #0070f3;
-            --warn:     #f5a623;
-            --danger:   #ff4d4d;
-            --text:     #e6edf3;
-            --muted:    #8b949e;
-            --radius:   14px;
-        }
-
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        body::before {
-            content: '';
-            position: fixed; inset: 0;
-            background:
-                radial-gradient(ellipse 60% 40% at 10% 0%, rgba(0,201,167,0.07) 0%, transparent 55%),
-                radial-gradient(ellipse 50% 40% at 90% 100%, rgba(0,112,243,0.05) 0%, transparent 55%);
-            pointer-events: none; z-index: 0;
-        }
-
-        .wrapper { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 28px 20px 60px; }
-
-        /* ── Header ── */
-        header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 32px; padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            animation: fadeDown 0.4s ease both;
-        }
-
-        .logo { display: flex; align-items: center; gap: 12px; }
-        .logo-icon {
-            width: 40px; height: 40px;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            border-radius: 11px; display: grid; place-items: center; font-size: 20px;
-        }
-        .logo h1 { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; }
-        .logo h1 span { color: var(--accent); }
-        .logo .badge-admin {
-            font-size: 0.65rem; font-weight: 700; padding: 3px 8px;
-            border-radius: 20px; background: rgba(245,166,35,0.15); color: var(--warn);
-            border: 1px solid rgba(245,166,35,0.25);
-        }
-
-        .header-right { display: flex; align-items: center; gap: 12px; }
-
-        .user-info { text-align: right; font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
-        .user-info strong { color: var(--text); display: block; }
-
-        .btn-sm {
-            background: var(--surface2); border: 1px solid var(--border); border-radius: 9px;
-            color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
-            padding: 8px 14px; cursor: pointer; transition: all 0.2s;
-        }
-        .btn-sm:hover { border-color: var(--danger); color: var(--danger); }
-
-        /* ── Tabs ── */
-        .tabs {
-            display: flex; gap: 4px; margin-bottom: 24px;
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 11px; padding: 4px;
-            animation: fadeUp 0.4s 0.1s ease both;
-        }
-
-        .tab {
-            flex: 1; padding: 9px 16px; border: none; border-radius: 8px;
-            background: transparent; color: var(--muted);
-            font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500;
-            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 7px;
-        }
-        .tab.active { background: var(--surface2); color: var(--text); }
-
-        /* ── Card ── */
-        .card {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 24px;
-            box-shadow: 0 4px 32px rgba(0,0,0,0.3);
-            animation: fadeUp 0.4s 0.2s ease both;
-        }
-
-        .card-title {
-            font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
-            margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
-        }
-
-        /* ── Formulaire création ── */
-        .form-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
-
-        .field { display: flex; flex-direction: column; gap: 6px; }
-        .field.full { grid-column: 1 / -1; }
-
-        label { font-size: 0.75rem; font-weight: 500; color: var(--muted); letter-spacing: 0.03em; }
-
-        input, select {
-            background: var(--surface2); border: 1px solid var(--border);
-            border-radius: 9px; color: var(--text);
-            font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
-            padding: 10px 13px; outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        input:focus, select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(0,201,167,0.1);
-        }
-        select option { background: var(--surface2); }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), #00a88b);
-            border: none; border-radius: 9px;
-            color: #0d1117; font-family: 'Syne', sans-serif;
-            font-size: 0.88rem; font-weight: 700;
-            padding: 11px 22px; cursor: pointer;
-            transition: opacity 0.2s, transform 0.15s;
-            display: inline-flex; align-items: center; gap: 7px;
-        }
-        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-        /* ── Table utilisateurs ── */
-        .table-wrap { overflow-x: auto; margin-top: 8px; }
-
-        table { width: 100%; border-collapse: collapse; }
-
-        thead tr { border-bottom: 1px solid var(--border); }
-
-        th {
-            text-align: left; font-size: 0.72rem; font-weight: 600;
-            color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
-            padding: 8px 12px 12px;
-        }
-
-        tbody tr {
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            transition: background 0.15s;
-        }
-        tbody tr:hover { background: rgba(255,255,255,0.02); }
-        tbody tr:last-child { border-bottom: none; }
-
-        td { padding: 12px; font-size: 0.85rem; vertical-align: middle; }
-
-        .td-email { color: var(--muted); font-size: 0.8rem; }
-
-        /* ── Badges rôles ── */
-        .role-badge {
-            display: inline-flex; align-items: center; gap: 5px;
-            font-size: 0.7rem; font-weight: 700;
-            padding: 4px 10px; border-radius: 20px;
-        }
-        .role-admin   { background: rgba(245,166,35,0.15); color: var(--warn);   border: 1px solid rgba(245,166,35,0.25); }
-        .role-gerant  { background: rgba(0,112,243,0.15);  color: #4da3ff;       border: 1px solid rgba(0,112,243,0.25); }
-        .role-employe { background: rgba(0,201,167,0.12);  color: var(--accent); border: 1px solid rgba(0,201,167,0.2); }
-
-        /* ── Actions ── */
-        .actions { display: flex; gap: 6px; align-items: center; }
-
-        .btn-role {
-            background: var(--surface2); border: 1px solid var(--border);
-            border-radius: 7px; color: var(--muted);
-            font-family: 'DM Sans', sans-serif; font-size: 0.75rem;
-            padding: 5px 10px; cursor: pointer; transition: all 0.15s;
-        }
-        .btn-role:hover { border-color: var(--accent2); color: #4da3ff; }
-
-        .btn-delete {
-            background: none; border: 1px solid rgba(255,77,77,0.2);
-            border-radius: 7px; color: rgba(255,77,77,0.6);
-            font-size: 0.8rem; width: 28px; height: 28px;
-            display: grid; place-items: center; cursor: pointer; transition: all 0.15s;
-        }
-        .btn-delete:hover { background: rgba(255,77,77,0.1); color: var(--danger); border-color: var(--danger); }
-
-        /* ── Statut actif ── */
-        .status-dot {
-            width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px;
-        }
-        .status-dot.active   { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
-        .status-dot.inactive { background: var(--muted); }
-
-        /* ── Messages ── */
-        .msg {
-            display: none; margin-top: 14px; padding: 11px 14px;
-            border-radius: 9px; font-size: 0.82rem; font-weight: 500;
-            align-items: center; gap: 8px;
-        }
-        .msg.error   { display: flex; background: rgba(255,77,77,0.1);  color: var(--danger); border: 1px solid rgba(255,77,77,0.2); }
-        .msg.success { display: flex; background: rgba(0,201,167,0.1); color: var(--accent);  border: 1px solid rgba(0,201,167,0.2); }
-
-        .spinner-sm {
-            width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.15);
-            border-top-color: currentColor; border-radius: 50%;
-            animation: spin 0.6s linear infinite; display: inline-block;
-        }
-
-        .empty-row td { text-align: center; color: var(--muted); padding: 32px; font-size: 0.85rem; }
-
-        /* ── Droits résumé ── */
-        .droits-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
-        .droits-table th, .droits-table td { padding: 10px 14px; text-align: left; font-size: 0.83rem; }
-        .droits-table thead th { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
-        .droits-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
-        .droits-table tbody tr:last-child { border: none; }
-        .check-yes { color: var(--accent); }
-        .check-no  { color: rgba(255,255,255,0.15); }
-
-        /* ── Sections ── */
-        .section { display: none; }
-        .section.active { display: block; }
-
-        @keyframes fadeDown { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: none; } }
-        @keyframes fadeUp   { from { opacity:0; transform: translateY(14px);  } to { opacity:1; transform: none; } }
-        @keyframes spin     { to { transform: rotate(360deg); } }
-    </style>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AquaDash - Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFFBF5;--s1:#FFF;--s2:#FFF5ED;--border:#E8E0D8;--b2:rgba(255,107,26,.2);--orange:#FF6B1A;--odk:#E05510;--olt:#FFF0E8;--t1:#1A1A1A;--t2:#888880;--t3:#D0CBC4;--green:#2E7D32;--gbg:#EDF7ED;--red:#A32D2D;--rbg:#FCEBEB;--amber:#BA7517;--abg:#FAEEDA;--blue:#185FA5;--bbg:#E6F1FB;--teal:#0F6E56;--tbg:#E1F5EE;--r:14px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:40px;height:40px;background:var(--orange);border-radius:11px;display:grid;place-items:center;font-size:20px}
+.logo h1{font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800}
+.logo h1 span{color:var(--orange)}
+.logo .tag{font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--abg);color:var(--amber);border:1px solid rgba(186,117,23,.25);margin-left:4px}
+.soc{font-size:.72rem;color:var(--t2)}
+.plan-badge{display:inline-flex;align-items:center;font-size:.62rem;font-weight:700;padding:2px 9px;border-radius:20px;margin-left:6px}
+.plan-badge.free{background:var(--gbg);color:var(--green)}.plan-badge.pro{background:var(--bbg);color:var(--blue)}.plan-badge.enterprise{background:var(--abg);color:var(--amber)}
+.hright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.user-pill{display:flex;align-items:center;gap:8px;background:var(--s1);border:1.5px solid var(--border);border-radius:30px;padding:4px 12px 4px 6px}
+.uav{width:26px;height:26px;border-radius:50%;background:var(--orange);display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+.uname{font-size:.8rem;font-weight:500}
+.role-pill{font-size:.63rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--abg);color:var(--amber);border:1px solid rgba(186,117,23,.25)}
+.btn-h{background:var(--s1);border:1.5px solid var(--border);border-radius:9px;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:.76rem;padding:6px 12px;cursor:pointer;transition:all .2s}
+.btn-h:hover{border-color:var(--orange);color:var(--orange)}
+.btn-h.teal{border-color:rgba(15,110,86,.3);color:var(--teal)}
+.btn-h.teal:hover{background:var(--tbg)}
+.tabs{display:flex;gap:4px;background:var(--s1);border:1.5px solid var(--border);border-radius:11px;padding:4px;margin-bottom:22px;overflow-x:auto}
+.tab{flex-shrink:0;padding:8px 16px;border:none;border-radius:8px;background:transparent;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab.active{background:var(--olt);color:var(--orange)}
+.kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.kc{background:var(--s1);border:1.5px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden;transition:transform .2s}
+.kc:hover{transform:translateY(-2px);box-shadow:0 5px 18px rgba(255,107,26,.07)}
+.kc::after{content:'';position:absolute;inset:0 0 auto 0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kc.or::after{background:var(--orange)}.kc.gr::after{background:var(--green)}.kc.re::after{background:var(--red)}.kc.bl::after{background:var(--blue)}.kc.te::after{background:var(--teal)}
+.kl{font-size:.68rem;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.kv{font-family:'Syne',sans-serif;font-size:1.45rem;font-weight:700;line-height:1}
+.kc.or .kv{color:var(--orange)}.kc.gr .kv{color:var(--green)}.kc.re .kv{color:var(--red)}.kc.bl .kv{color:var(--blue)}.kc.te .kv{color:var(--teal)}
+.ks{font-size:.68rem;color:var(--t2);margin-top:3px}
+.sec{display:none}.sec.active{display:block}
+.card{background:var(--s1);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.ct{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:14px;background:var(--olt);border:1px solid var(--b2)}
+.cbdg{font-size:.65rem;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--s2);color:var(--t2);border:1px solid var(--border)}
+.tbl{width:100%;border-collapse:collapse}
+.tbl thead tr{border-bottom:1px solid var(--border)}
+.tbl th{text-align:left;font-size:.68rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px 10px;white-space:nowrap}
+.tbl tbody tr{border-bottom:1px solid rgba(0,0,0,.04);transition:background .15s}
+.tbl tbody tr:hover{background:var(--s2)}
+.tbl tbody tr:last-child{border:none}
+.tbl td{padding:10px 12px;font-size:.83rem;vertical-align:middle}
+.bdg{display:inline-flex;align-items:center;font-size:.67rem;font-weight:700;padding:3px 9px;border-radius:20px}
+.bdg.gr{background:var(--gbg);color:var(--green)}.bdg.re{background:var(--rbg);color:var(--red)}.bdg.am{background:var(--abg);color:var(--amber)}.bdg.bl{background:var(--bbg);color:var(--blue)}.bdg.or{background:var(--olt);color:var(--odk)}.bdg.te{background:var(--tbg);color:var(--teal)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+@media(max-width:600px){.fg{grid-template-columns:1fr}}
+.ff{display:flex;flex-direction:column;gap:5px}.ff.full{grid-column:1/-1}
+.ff label{font-size:.72rem;font-weight:500;color:var(--t2);text-transform:uppercase;letter-spacing:.03em}
+.ff input,.ff select{background:var(--s2);border:1.5px solid var(--border);border-radius:9px;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:.86rem;padding:9px 12px;outline:none;transition:border-color .2s}
+.ff input:focus,.ff select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,107,26,.1)}
+.ff select option{background:var(--s1)}
+.btn-o{background:var(--orange);border:none;border-radius:9px;color:#fff;font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;padding:10px 20px;cursor:pointer;transition:background .2s;display:inline-flex;align-items:center;gap:7px}
+.btn-o:hover{background:var(--odk)}.btn-o:disabled{opacity:.4;cursor:not-allowed}
+.btn-sm{background:var(--s2);border:1.5px solid var(--border);border-radius:7px;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:.76rem;padding:5px 10px;cursor:pointer;transition:all .15s}
+.btn-sm:hover{border-color:var(--orange);color:var(--orange)}
+.btn-sm.re{border-color:rgba(163,45,45,.2);color:var(--red)}.btn-sm.re:hover{background:var(--rbg)}
+.msg{display:none;margin-top:12px;padding:10px 14px;border-radius:9px;font-size:.82rem;font-weight:500;align-items:center;gap:8px}
+.msg.ok{display:flex;background:var(--gbg);color:var(--green);border:1.5px solid rgba(46,125,50,.2)}
+.msg.err{display:flex;background:var(--rbg);color:var(--red);border:1.5px solid rgba(163,45,45,.2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.chart-wrap{height:220px;position:relative}
+.list-vente{list-style:none;display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto}
+.item-v{display:flex;justify-content:space-between;align-items:center;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;padding:10px 14px}
+.empty{padding:24px;text-align:center;color:var(--t2);font-size:.83rem}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
 </head>
 <body>
-<div class="wrapper">
-
-    <!-- ── Header ── -->
-    <header>
-        <div class="logo">
-            <div class="logo-icon">🐟</div>
-            <div>
-                <h1>Aqua<span>Dash</span></h1>
-            </div>
-            <span class="badge-admin">ADMIN</span>
-        </div>
-        <div class="header-right">
-            <div class="user-info">
-                <strong id="header-nom">–</strong>
-                Administrateur
-            </div>
-            <button class="btn-sm" onclick="logout()">Déconnexion</button>
-            <a href="index.html"><button class="btn-sm" style="border-color:rgba(0,201,167,0.3);color:var(--accent);">→ Dashboard</button></a>
-        </div>
-    </header>
-
-    <!-- ── Tabs ── -->
-    <div class="tabs">
-        <button class="tab active" onclick="switchTab('utilisateurs', this)">👥 Utilisateurs</button>
-        <button class="tab" onclick="switchTab('creer', this)">➕ Créer un compte</button>
-        <button class="tab" onclick="switchTab('droits', this)">🔑 Droits d'accès</button>
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🐟</div>
+      <div>
+        <h1>Aqua<span>Dash</span> <span class="tag">ADMIN</span></h1>
+        <div class="soc"><span id="tenant-name">-</span> <span class="plan-badge" id="plan-badge">free</span></div>
+      </div>
     </div>
-
-    <!-- ════════════ TAB : UTILISATEURS ════════════ -->
-    <div class="section active" id="tab-utilisateurs">
-        <div class="card">
-            <div class="card-title">👥 Gestion des utilisateurs <span id="count-users" style="font-size:0.75rem;color:var(--muted);font-weight:400;"></span></div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nom</th>
-                            <th>E-mail</th>
-                            <th>Rôle</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="users-table">
-                        <tr class="empty-row"><td colspan="5"><span class="spinner-sm"></span> Chargement…</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="hright">
+      <div class="user-pill"><div class="uav" id="user-avatar">A</div><span class="uname" id="user-name">-</span><span class="role-pill admin" id="user-role-badge">Admin</span></div>
+      <button class="btn-h teal" onclick="window.location.href='gerant.html'">🧊 Chambre froide</button>
+      <button class="btn-h" onclick="Auth.logout()">Deconnexion</button>
     </div>
+  </header>
 
-    <!-- ════════════ TAB : CRÉER ════════════ -->
-    <div class="section" id="tab-creer">
-        <div class="card">
-            <div class="card-title">➕ Créer un nouveau compte</div>
+  <div class="tabs">
+    <button class="tab active" onclick="sw('dashboard',this)">📊 Dashboard</button>
+    <button class="tab" onclick="sw('ventes',this)">💰 Ventes</button>
+    <button class="tab" onclick="sw('users',this)">👥 Utilisateurs</button>
+    <button class="tab" onclick="sw('creer-user',this)">➕ Creer un compte</button>
+  </div>
 
-            <div class="form-grid">
-                <div class="field">
-                    <label>Prénom et nom</label>
-                    <input type="text" id="new-nom" placeholder="Ex : Kouassi Amani"/>
-                </div>
-                <div class="field">
-                    <label>Adresse e-mail</label>
-                    <input type="email" id="new-email" placeholder="employe@poissonnerie.ci"/>
-                </div>
-                <div class="field">
-                    <label>Mot de passe temporaire</label>
-                    <input type="password" id="new-password" placeholder="Min. 8 caractères"/>
-                </div>
-                <div class="field">
-                    <label>Rôle attribué</label>
-                    <select id="new-role">
-                        <option value="employe">👷 Employé – lecture seule</option>
-                        <option value="gerant">📋 Gérant – accès complet</option>
-                        <option value="admin">🔑 Administrateur – gestion totale</option>
-                    </select>
-                </div>
-            </div>
-
-            <button class="btn-primary" id="btn-creer" onclick="creerUtilisateur()">
-                ➕ Créer le compte
-            </button>
-
-            <div class="msg" id="msg-creer"></div>
-        </div>
+  <!-- DASHBOARD -->
+  <div class="sec active" id="sec-dashboard">
+    <div class="kpi-bar">
+      <div class="kc gr"><div class="kl">Ventes du jour</div><div class="kv" id="kpi-jour">-</div><div class="ks">FCFA</div></div>
+      <div class="kc or"><div class="kl">Total ventes</div><div class="kv" id="kpi-total">-</div><div class="ks">FCFA cumule</div></div>
+      <div class="kc bl"><div class="kl">Gerants</div><div class="kv" id="kpi-gerants">-</div><div class="ks">actifs</div></div>
+      <div class="kc te"><div class="kl">Employes</div><div class="kv" id="kpi-employes">-</div><div class="ks">actifs</div></div>
+      <div class="kc re"><div class="kl">Alertes</div><div class="kv" id="kpi-al">-</div><div class="ks">expirations</div></div>
     </div>
-
-    <!-- ════════════ TAB : DROITS ════════════ -->
-    <div class="section" id="tab-droits">
-        <div class="card">
-            <div class="card-title">🔑 Matrice des droits d'accès</div>
-            <div class="table-wrap">
-                <table class="droits-table">
-                    <thead>
-                        <tr>
-                            <th>Fonctionnalité</th>
-                            <th><span class="role-badge role-employe">👷 Employé</span></th>
-                            <th><span class="role-badge role-gerant">📋 Gérant</span></th>
-                            <th><span class="role-badge role-admin">🔑 Admin</span></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>🐟 Voir les produits</td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td></tr>
-                        <tr><td>⚠️ Voir les alertes expiration</td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td></tr>
-                        <tr><td>💰 Voir l'historique des ventes</td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td></tr>
-                        <tr><td>📊 Voir le graphique ventes</td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td></tr>
-                        <tr><td>💳 Voir les KPIs financiers</td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td><td><span class="check-yes">✔</span></td></tr>
-                        <tr><td>👥 Voir les utilisateurs</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td></tr>
-                        <tr><td>➕ Créer des comptes</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td></tr>
-                        <tr><td>🔄 Modifier les rôles</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td></tr>
-                        <tr><td>🗑️ Désactiver des comptes</td><td><span class="check-no">✗</span></td><td><span class="check-no">✗</span></td><td><span class="check-yes">✔</span></td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="ch"><div class="ct"><div class="ic">📊</div>Ventes par jour</div><button class="btn-sm" onclick="loadDashboard()">Actualiser</button></div>
+        <div class="chart-wrap"><canvas id="chart-ventes"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct"><div class="ic">💰</div>Dernieres ventes</div></div>
+        <ul class="list-vente" id="list-ventes-dash">
+          <li class="empty"><span class="spinner"></span>Chargement...</li>
+        </ul>
+      </div>
     </div>
+  </div>
 
-</div><!-- /wrapper -->
+  <!-- VENTES -->
+  <div class="sec" id="sec-ventes">
+    <div class="card">
+      <div class="ch"><div class="ct"><div class="ic">💰</div>Historique des ventes</div><span class="cbdg" id="bdg-ventes">...</span></div>
+      <div style="overflow-x:auto">
+        <table class="tbl"><thead><tr><th>Date</th><th>Client</th><th>Montant TTC</th><th>Statut</th></tr></thead>
+        <tbody id="tbl-ventes"><tr><td colspan="4" class="empty"><span class="spinner"></span>Chargement...</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
 
+  <!-- UTILISATEURS -->
+  <div class="sec" id="sec-users">
+    <div class="card">
+      <div class="ch"><div class="ct"><div class="ic">👥</div>Utilisateurs</div><span class="cbdg" id="bdg-users">...</span></div>
+      <div style="overflow-x:auto">
+        <table class="tbl"><thead><tr><th>Nom</th><th>Email</th><th>Role</th><th>Statut</th><th>Actions</th></tr></thead>
+        <tbody id="tbl-users"><tr><td colspan="5" class="empty"><span class="spinner"></span>Chargement...</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREER UTILISATEUR -->
+  <div class="sec" id="sec-creer-user">
+    <div class="card">
+      <div class="ch"><div class="ct"><div class="ic">➕</div>Creer un nouveau compte</div></div>
+      <div class="fg">
+        <div class="ff"><label>Nom complet</label><input id="u-nom" type="text" placeholder="Jean Dupont"/></div>
+        <div class="ff"><label>Adresse e-mail</label><input id="u-email" type="email" placeholder="email@societe.ci"/></div>
+        <div class="ff"><label>Mot de passe temporaire</label><input id="u-pass" type="password" placeholder="Min 8 caracteres"/></div>
+        <div class="ff"><label>Role</label>
+          <select id="u-role">
+            <option value="employe">Employe - lecture seule</option>
+            <option value="gerant">Gerant - chambre froide</option>
+            <option value="admin">Admin - acces complet</option>
+          </select>
+        </div>
+      </div>
+      <div style="background:var(--s2);border:1.5px solid var(--border);border-radius:9px;padding:12px 16px;margin-bottom:14px;font-size:.82rem;color:var(--t2)" id="limite-info"></div>
+      <button class="btn-o" id="btn-creer" onclick="creerUser()">➕ Creer le compte</button>
+      <div class="msg" id="msg-creer"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
 <script>
-    // ══════════════════════════════════════
-    // VÉRIFICATION SESSION ADMIN
-    // ══════════════════════════════════════
+var session = Auth.requireAuth();
+if (session && session.role !== "admin" && session.role !== "super_admin") window.location.href = Auth.getHomeByRole(session.role);
+Auth.fillHeader(session);
+if (session.tenant_plan) {
+  var pb=document.getElementById("plan-badge");
+  pb.textContent=session.tenant_plan.charAt(0).toUpperCase()+session.tenant_plan.slice(1);
+  pb.className="plan-badge "+session.tenant_plan;
+}
 
-    const SESSION_KEY = "aqua_session";
+var chartV = null;
+var fmt = function(n){return Number(n||0).toLocaleString("fr-FR");};
+var fmtF = function(n){return fmt(n)+" FCFA";};
+var fmtD = function(iso){return iso?new Date(iso).toLocaleDateString("fr-FR"):"-";};
+var fmtDT = function(iso){return iso?new Date(iso).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"-";};
+var esc = function(s){return String(s||"").replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});};
 
-    function getSession() {
-        try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); }
-        catch { return null; }
-    }
+function sw(name,btn){
+  document.querySelectorAll(".sec").forEach(function(s){s.classList.remove("active");});
+  document.querySelectorAll(".tab").forEach(function(t){t.classList.remove("active");});
+  document.getElementById("sec-"+name).classList.add("active");
+  btn.classList.add("active");
+  if(name==="users") loadUsers();
+  if(name==="ventes") loadVentes();
+  if(name==="creer-user") loadLimites();
+}
 
-    (function guardAdmin() {
-        const s = getSession();
-        if (!s || !s.token) {
-            window.location.href = "login.html";
-            return;
-        }
-        if (s.role !== "admin") {
-            // Non admin → rediriger vers dashboard
-            window.location.href = "index.html";
-            return;
-        }
-        document.getElementById("header-nom").textContent = s.nom || s.email;
-    })();
+async function loadDashboard(){
+  try{
+    var data=await API.get("stats","vue=admin");
+    var t=data.totaux||{};
+    document.getElementById("kpi-jour").textContent    = fmt(t.ventes_jour||0);
+    document.getElementById("kpi-total").textContent   = fmt(t.total_ventes||0);
+    document.getElementById("kpi-gerants").textContent  = t.nb_gerants||0;
+    document.getElementById("kpi-employes").textContent = t.nb_employes||0;
+    document.getElementById("kpi-al").textContent       = t.nb_alertes||0;
+    renderChartVentes(data.factures||[]);
+    renderListVentes(data.factures||[]);
+  }catch(err){console.error(err);}
+}
 
-    function logout() {
-        sessionStorage.removeItem(SESSION_KEY);
-        window.location.href = "login.html";
-    }
+function renderChartVentes(factures){
+  var parJour={};
+  factures.forEach(function(f){var d=f.date_facture;if(!d)return;parJour[d]=(parJour[d]||0)+Number(f.total_ttc||0);});
+  var labels=Object.keys(parJour).sort().slice(-14);
+  var vals=labels.map(function(d){return parJour[d];});
+  var labelsAff=labels.map(function(d){return new Date(d).toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit"});});
+  var ctx=document.getElementById("chart-ventes");
+  if(chartV){chartV.destroy();chartV=null;}
+  chartV=new Chart(ctx,{type:"bar",data:{labels:labelsAff,datasets:[{label:"Ventes FCFA",data:vals,backgroundColor:vals.map(function(_,i){return i===vals.length-1?"rgba(255,107,26,1)":"rgba(255,107,26,.22)";}),borderColor:"rgba(255,107,26,.7)",borderWidth:1.5,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#888880",font:{size:10}},grid:{color:"rgba(232,224,216,.5)"}},y:{ticks:{color:"#888880",font:{size:10},callback:function(v){return (v/1000).toFixed(0)+"k";}},grid:{color:"rgba(232,224,216,.5)"}}}}});
+}
 
-    // ══════════════════════════════════════
-    // ONGLETS
-    // ══════════════════════════════════════
+function renderListVentes(factures){
+  var el=document.getElementById("list-ventes-dash");
+  var sorted=factures.slice().sort(function(a,b){return new Date(b.date_facture)-new Date(a.date_facture);}).slice(0,8);
+  if(!sorted.length){el.innerHTML='<li class="empty">Aucune vente</li>';return;}
+  el.innerHTML=sorted.map(function(f){return '<li class="item-v"><div><div style="font-size:.84rem;font-weight:500">'+esc(f.client_nom||"Client inconnu")+'</div><div style="font-size:.72rem;color:var(--t2)">'+fmtD(f.date_facture)+'</div></div><strong style="color:var(--orange)">'+fmtF(f.total_ttc||0)+'</strong></li>';}).join("");
+}
 
-    function switchTab(name, btn) {
-        document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-        document.getElementById("tab-" + name).classList.add("active");
-        btn.classList.add("active");
-    }
+async function loadVentes(){
+  var tb=document.getElementById("tbl-ventes");
+  try{
+    var data=await API.get("factures");
+    document.getElementById("bdg-ventes").textContent=data.length+" facture(s)";
+    if(!data.length){tb.innerHTML='<tr><td colspan="4" class="empty">Aucune vente</td></tr>';return;}
+    tb.innerHTML=data.map(function(f){
+      var st=f.statut==="payee"?'<span class="bdg gr">Payee</span>':f.statut==="en_attente"?'<span class="bdg am">En attente</span>':'<span class="bdg re">Annulee</span>';
+      return '<tr><td>'+fmtD(f.date_facture)+'</td><td>'+esc(f.client_nom||"-")+'</td><td style="color:var(--orange);font-weight:600">'+fmtF(f.total_ttc||0)+'</td><td>'+st+'</td></tr>';
+    }).join("");
+  }catch(err){tb.innerHTML='<tr><td colspan="4" class="empty" style="color:var(--red)">Erreur : '+err.message+'</td></tr>';}
+}
 
-    // ══════════════════════════════════════
-    // CHARGER UTILISATEURS
-    // ══════════════════════════════════════
+async function loadUsers(){
+  var tb=document.getElementById("tbl-users");
+  try{
+    var data=await API.get("users");
+    document.getElementById("bdg-users").textContent=data.length+" compte(s)";
+    if(!data.length){tb.innerHTML='<tr><td colspan="5" class="empty">Aucun utilisateur</td></tr>';return;}
+    tb.innerHTML=data.map(function(u){
+      var rb=u.role==="admin"?'<span class="bdg am">Admin</span>':u.role==="gerant"?'<span class="bdg te">Gerant</span>':'<span class="bdg bl">Employe</span>';
+      var st=u.actif?'<span class="bdg gr">Actif</span>':'<span class="bdg re">Inactif</span>';
+      var sel='<select onchange="changeRole(\''+u.id+'\',this.value)" style="background:var(--s2);border:1.5px solid var(--border);border-radius:7px;color:var(--t1);font-family:DM Sans,sans-serif;font-size:.76rem;padding:4px 8px;outline:none"><option value="">Changer role...</option><option value="employe">Employe</option><option value="gerant">Gerant</option><option value="admin">Admin</option></select>';
+      var tog='<button class="btn-sm re" onclick="toggleUser(\''+u.id+'\','+u.actif+')">'+(u.actif?"Desactiver":"Reactiver")+'</button>';
+      return '<tr><td><strong>'+esc(u.nom||"-")+'</strong></td><td style="color:var(--t2);font-size:.8rem">'+esc(u.email)+'</td><td>'+rb+'</td><td>'+st+'</td><td style="display:flex;gap:6px;align-items:center">'+sel+tog+'</td></tr>';
+    }).join("");
+  }catch(err){tb.innerHTML='<tr><td colspan="5" class="empty" style="color:var(--red)">Erreur : '+err.message+'</td></tr>';}
+}
 
-    async function loadUsers() {
-        const tbody = document.getElementById("users-table");
-        try {
-            const s = getSession();
-            const res = await fetch("/.netlify/functions/admin-users", {
-                headers: { Authorization: "Bearer " + s.token }
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
+async function changeRole(userId,role){
+  if(!role)return;
+  try{await API.patch("users",{userId:userId,role:role});await loadUsers();}
+  catch(err){alert("Erreur : "+err.message);}
+}
 
-            document.getElementById("count-users").textContent = `(${data.length} compte(s))`;
+async function toggleUser(userId,actif){
+  if(!confirm("Confirmer cette action ?"))return;
+  try{await API.patch("users",{userId:userId,actif:!actif});await loadUsers();}
+  catch(err){alert("Erreur : "+err.message);}
+}
 
-            if (!data.length) {
-                tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Aucun utilisateur trouvé</td></tr>`;
-                return;
-            }
+async function loadLimites(){
+  var planLimites={free:"Plan Gratuit : 1 gerant, 3 employes, 50 produits",pro:"Plan Pro : 5 gerants, 20 employes, produits illimites",enterprise:"Plan Enterprise : tout illimite"};
+  var el=document.getElementById("limite-info");
+  el.textContent=planLimites[session.tenant_plan||"free"]||"";
+}
 
-            tbody.innerHTML = data.map(u => `
-                <tr>
-                    <td><strong>${escHtml(u.nom || "–")}</strong></td>
-                    <td class="td-email">${escHtml(u.email)}</td>
-                    <td><span class="role-badge role-${u.role}">${roleLabel(u.role)}</span></td>
-                    <td>
-                        <span class="status-dot ${u.actif ? 'active' : 'inactive'}"></span>
-                        ${u.actif ? "Actif" : "Inactif"}
-                    </td>
-                    <td>
-                        <div class="actions">
-                            <select class="btn-role" onchange="changeRole('${u.id}', this.value)">
-                                <option value="">Changer rôle…</option>
-                                <option value="employe">👷 Employé</option>
-                                <option value="gerant">📋 Gérant</option>
-                                <option value="admin">🔑 Admin</option>
-                            </select>
-                            <button class="btn-delete" title="Désactiver" onclick="toggleUser('${u.id}', ${u.actif})">
-                                ${u.actif ? "🚫" : "✅"}
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join("");
+async function creerUser(){
+  var nom=document.getElementById("u-nom").value.trim(),email=document.getElementById("u-email").value.trim(),pass=document.getElementById("u-pass").value,role=document.getElementById("u-role").value;
+  var btn=document.getElementById("btn-creer"); UI.clearMsg("msg-creer");
+  if(!nom||!email||!pass){UI.showMsg("msg-creer","err","Remplissez tous les champs.");return;}
+  if(pass.length<8){UI.showMsg("msg-creer","err","Mot de passe trop court.");return;}
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Creation...';
+  try{
+    await API.post("users",{nom:nom,email:email,password:pass,role:role});
+    UI.showMsg("msg-creer","ok","Compte cree pour "+nom+" ("+role+").");
+    ["u-nom","u-email","u-pass"].forEach(function(id){document.getElementById(id).value="";});
+  }catch(err){UI.showMsg("msg-creer","err","Erreur : "+err.message);}
+  btn.disabled=false; btn.textContent="➕ Creer le compte";
+}
 
-        } catch (err) {
-            tbody.innerHTML = `<tr class="empty-row"><td colspan="5" style="color:#ff4d4d;">❌ ${err.message}</td></tr>`;
-        }
-    }
-
-    function roleLabel(role) {
-        return { admin: "🔑 Admin", gerant: "📋 Gérant", employe: "👷 Employé" }[role] || role;
-    }
-
-    function escHtml(str) {
-        return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    }
-
-    // ══════════════════════════════════════
-    // CHANGER RÔLE
-    // ══════════════════════════════════════
-
-    async function changeRole(userId, role) {
-        if (!role) return;
-        try {
-            const s = getSession();
-            const res = await fetch("/.netlify/functions/admin-users", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json", Authorization: "Bearer " + s.token },
-                body: JSON.stringify({ userId, role })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-            await loadUsers();
-        } catch (err) {
-            alert("Erreur : " + err.message);
-        }
-    }
-
-    // ══════════════════════════════════════
-    // ACTIVER / DÉSACTIVER UN UTILISATEUR
-    // ══════════════════════════════════════
-
-    async function toggleUser(userId, estActif) {
-        const action = estActif ? "désactiver" : "réactiver";
-        if (!confirm(`Voulez-vous vraiment ${action} cet utilisateur ?`)) return;
-        try {
-            const s = getSession();
-            const res = await fetch("/.netlify/functions/admin-users", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json", Authorization: "Bearer " + s.token },
-                body: JSON.stringify({ userId, actif: !estActif })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-            await loadUsers();
-        } catch (err) {
-            alert("Erreur : " + err.message);
-        }
-    }
-
-    // ══════════════════════════════════════
-    // CRÉER UN UTILISATEUR
-    // ══════════════════════════════════════
-
-    async function creerUtilisateur() {
-        const nom      = document.getElementById("new-nom").value.trim();
-        const email    = document.getElementById("new-email").value.trim();
-        const password = document.getElementById("new-password").value;
-        const role     = document.getElementById("new-role").value;
-        const btn      = document.getElementById("btn-creer");
-        const msg      = document.getElementById("msg-creer");
-
-        msg.className = "msg";
-
-        if (!nom || !email || !password) {
-            showMsg2("error", "Tous les champs sont obligatoires.");
-            return;
-        }
-        if (password.length < 8) {
-            showMsg2("error", "Le mot de passe doit contenir au moins 8 caractères.");
-            return;
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-sm"></span> Création en cours…`;
-
-        try {
-            const s = getSession();
-            const res = await fetch("/.netlify/functions/admin-users", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: "Bearer " + s.token },
-                body: JSON.stringify({ nom, email, password, role })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-
-            showMsg2("success", `✅ Compte créé pour ${nom} avec le rôle « ${role} ».`);
-
-            // Réinitialiser le formulaire
-            ["new-nom","new-email","new-password"].forEach(id => document.getElementById(id).value = "");
-            document.getElementById("new-role").value = "employe";
-
-        } catch (err) {
-            showMsg2("error", "❌ " + err.message);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `➕ Créer le compte`;
-        }
-    }
-
-    function showMsg2(type, text) {
-        const m = document.getElementById("msg-creer");
-        m.className = "msg " + type;
-        m.textContent = text;
-    }
-
-    // ══════════════════════════════════════
-    // INIT
-    // ══════════════════════════════════════
-    loadUsers();
+loadDashboard();
 </script>
 </body>
 </html>

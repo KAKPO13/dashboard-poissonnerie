@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AquaDash - Super Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0D1117;--s1:#161B22;--s2:#1E2530;--border:rgba(255,255,255,.08);--b2:rgba(255,255,255,.04);--orange:#FF6B1A;--olt:rgba(255,107,26,.12);--t1:#E6EDF3;--t2:#8B949E;--green:#2EA043;--gbg:rgba(46,160,67,.12);--red:#FF4D4D;--rbg:rgba(255,77,77,.12);--amber:#D29922;--abg:rgba(210,153,34,.12);--blue:#58A6FF;--bbg:rgba(88,166,255,.12);--purple:#BC8CFF;--pbg:rgba(188,140,255,.12);--r:12px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 15% 0%,rgba(255,107,26,.05) 0%,transparent 55%);pointer-events:none}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 60px;position:relative;z-index:1}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--orange),#e05510);border-radius:11px;display:grid;place-items:center;font-size:20px}
+.logo h1{font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800}
+.logo h1 span{color:var(--orange)}
+.logo .tag{font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(210,153,34,.15);color:var(--amber);border:1px solid rgba(210,153,34,.3);margin-left:4px}
+.hright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.user-pill{display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--border);border-radius:30px;padding:4px 12px 4px 6px}
+.uav{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#e05510);display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+.uname{font-size:.8rem;font-weight:500}
+.role-pill{font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--abg);color:var(--amber);border:1px solid rgba(210,153,34,.25)}
+.btn-h{background:none;border:1px solid var(--border);border-radius:9px;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:.76rem;padding:6px 12px;cursor:pointer;transition:all .2s}
+.btn-h:hover{border-color:var(--orange);color:var(--orange)}
+.tabs{display:flex;gap:4px;background:var(--s1);border:1px solid var(--border);border-radius:11px;padding:4px;margin-bottom:22px;overflow-x:auto}
+.tab{flex-shrink:0;padding:8px 16px;border:none;border-radius:8px;background:transparent;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab.active{background:var(--s2);color:var(--t1)}
+.kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:22px}
+.kc{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden;transition:transform .2s}
+.kc:hover{transform:translateY(-2px)}
+.kc::after{content:'';position:absolute;inset:0 0 auto 0;height:2px}
+.kc.or::after{background:var(--orange)}.kc.gr::after{background:var(--green)}.kc.bl::after{background:var(--blue)}.kc.am::after{background:var(--amber)}.kc.pu::after{background:var(--purple)}
+.kl{font-size:.67rem;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.kv{font-family:'Syne',sans-serif;font-size:1.45rem;font-weight:700;line-height:1}
+.kc.or .kv{color:var(--orange)}.kc.gr .kv{color:var(--green)}.kc.bl .kv{color:var(--blue)}.kc.am .kv{color:var(--amber)}.kc.pu .kv{color:var(--purple)}
+.ks{font-size:.67rem;color:var(--t2);margin-top:3px}
+.sec{display:none}.sec.active{display:block}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.ct{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:14px;background:var(--s2)}
+.tbl{width:100%;border-collapse:collapse}
+.tbl thead tr{border-bottom:1px solid var(--border)}
+.tbl th{text-align:left;font-size:.66rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px 10px;white-space:nowrap}
+.tbl tbody tr{border-bottom:1px solid rgba(255,255,255,.03);transition:background .15s}
+.tbl tbody tr:hover{background:var(--b2)}
+.tbl tbody tr:last-child{border:none}
+.tbl td{padding:10px 12px;font-size:.82rem;vertical-align:middle}
+.bdg{display:inline-flex;align-items:center;font-size:.66rem;font-weight:700;padding:3px 9px;border-radius:20px}
+.bdg.gr{background:var(--gbg);color:var(--green)}.bdg.re{background:var(--rbg);color:var(--red)}.bdg.am{background:var(--abg);color:var(--amber)}.bdg.bl{background:var(--bbg);color:var(--blue)}.bdg.or{background:var(--olt);color:var(--orange)}.bdg.pu{background:var(--pbg);color:var(--purple)}
+.btn-sm{background:var(--s2);border:1px solid var(--border);border-radius:7px;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:.75rem;padding:4px 10px;cursor:pointer;transition:all .15s}
+.btn-sm:hover{border-color:var(--orange);color:var(--orange)}
+.btn-sm.re{border-color:rgba(255,77,77,.2);color:var(--red)}.btn-sm.re:hover{background:var(--rbg)}
+.btn-sm.gr{border-color:rgba(46,160,67,.2);color:var(--green)}.btn-sm.gr:hover{background:var(--gbg)}
+.search-bar{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:9px;color:var(--t1);font-family:'DM Sans',sans-serif;font-size:.86rem;padding:9px 13px;outline:none;transition:border-color .2s;margin-bottom:14px}
+.search-bar:focus{border-color:var(--orange)}
+.search-bar::placeholder{color:var(--t2)}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+@media(max-width:700px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-item{background:var(--s2);border-radius:8px;padding:8px 12px;text-align:center}
+.stat-v{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:var(--orange)}
+.stat-l{font-size:.68rem;color:var(--t2);margin-top:2px}
+.empty{padding:24px;text-align:center;color:var(--t2);font-size:.83rem}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🐟</div>
+      <div><h1>Aqua<span>Dash</span> <span class="tag">SUPER ADMIN</span></h1></div>
+    </div>
+    <div class="hright">
+      <div class="user-pill"><div class="uav" id="user-avatar">S</div><span class="uname" id="user-name">-</span><span class="role-pill" id="user-role-badge">Super Admin</span></div>
+      <button class="btn-h" onclick="Auth.logout()">Deconnexion</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="sw('overview',this)">📈 Vue globale</button>
+    <button class="tab" onclick="sw('societes',this)">🏢 Societes</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="sec active" id="sec-overview">
+    <div class="kpi-bar">
+      <div class="kc or"><div class="kl">Societes actives</div><div class="kv" id="kpi-actives">-</div><div class="ks">sur la plateforme</div></div>
+      <div class="kc pu"><div class="kl">Total societes</div><div class="kv" id="kpi-total">-</div><div class="ks">inscrites</div></div>
+      <div class="kc gr"><div class="kl">Plan Free</div><div class="kv" id="kpi-free">-</div><div class="ks">societes</div></div>
+      <div class="kc bl"><div class="kl">Plan Pro</div><div class="kv" id="kpi-pro">-</div><div class="ks">societes</div></div>
+      <div class="kc am"><div class="kl">Enterprise</div><div class="kv" id="kpi-ent">-</div><div class="ks">societes</div></div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct"><div class="ic">📈</div>Statistiques globales</div><button class="btn-sm" onclick="loadData()">Actualiser</button></div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-v" id="sg-users">-</div><div class="stat-l">Utilisateurs totaux</div></div>
+        <div class="stat-item"><div class="stat-v" id="sg-produits">-</div><div class="stat-l">Produits total</div></div>
+        <div class="stat-item"><div class="stat-v" id="sg-ventes">-</div><div class="stat-l">Ventes totales (FCFA)</div></div>
+        <div class="stat-item"><div class="stat-v" id="sg-suspended">-</div><div class="stat-l">Comptes suspendus</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOCIETES -->
+  <div class="sec" id="sec-societes">
+    <div class="card">
+      <div class="ch"><div class="ct"><div class="ic">🏢</div>Toutes les societes</div><button class="btn-sm" onclick="loadData()">Actualiser</button></div>
+      <input type="text" class="search-bar" id="search" placeholder="Rechercher par nom, email, slug..." oninput="filterTable()"/>
+      <div style="overflow-x:auto">
+        <table class="tbl" id="tbl-societes">
+          <thead><tr><th>Societe</th><th>Email</th><th>Plan</th><th>Statut</th><th>Gerants</th><th>Employes</th><th>Produits</th><th>Ventes</th><th>Actions</th></tr></thead>
+          <tbody id="tbody-soc"><tr><td colspan="9" class="empty"><span class="spinner"></span>Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script>
+var session = Auth.requireAuth();
+if (session && session.role !== "super_admin") window.location.href = Auth.getHomeByRole(session.role);
+Auth.fillHeader(session);
+
+var ALL_TENANTS = [];
+var fmt = function(n){return Number(n||0).toLocaleString("fr-FR");};
+var fmtF = function(n){return fmt(n)+" FCFA";};
+var esc = function(s){return String(s||"").replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});};
+
+function sw(name,btn){
+  document.querySelectorAll(".sec").forEach(function(s){s.classList.remove("active");});
+  document.querySelectorAll(".tab").forEach(function(t){t.classList.remove("active");});
+  document.getElementById("sec-"+name).classList.add("active");
+  btn.classList.add("active");
+}
+
+async function loadData(){
+  try{
+    var data = await API.get("tenants");
+    ALL_TENANTS = data||[];
+    var actives=ALL_TENANTS.filter(function(t){return t.statut==="actif";}).length;
+    var suspendus=ALL_TENANTS.filter(function(t){return t.statut==="suspendu";}).length;
+    var free=ALL_TENANTS.filter(function(t){return t.plan==="free";}).length;
+    var pro=ALL_TENANTS.filter(function(t){return t.plan==="pro";}).length;
+    var ent=ALL_TENANTS.filter(function(t){return t.plan==="enterprise";}).length;
+    var totalUsers=ALL_TENANTS.reduce(function(s,t){return s+(t.nb_admins||0)+(t.nb_gerants||0)+(t.nb_employes||0);},0);
+    var totalProd=ALL_TENANTS.reduce(function(s,t){return s+(t.nb_produits||0);},0);
+    var totalVentes=ALL_TENANTS.reduce(function(s,t){return s+Number(t.total_ventes||0);},0);
+    document.getElementById("kpi-actives").textContent=actives;
+    document.getElementById("kpi-total").textContent=ALL_TENANTS.length;
+    document.getElementById("kpi-free").textContent=free;
+    document.getElementById("kpi-pro").textContent=pro;
+    document.getElementById("kpi-ent").textContent=ent;
+    document.getElementById("sg-users").textContent=totalUsers;
+    document.getElementById("sg-produits").textContent=totalProd;
+    document.getElementById("sg-ventes").textContent=fmt(totalVentes);
+    document.getElementById("sg-suspended").textContent=suspendus;
+    renderTable(ALL_TENANTS);
+  }catch(err){
+    document.getElementById("tbody-soc").innerHTML='<tr><td colspan="9" class="empty" style="color:var(--red)">Erreur : '+err.message+'</td></tr>';
+    console.error(err);
+  }
+}
+
+function renderTable(tenants){
+  var tb=document.getElementById("tbody-soc");
+  if(!tenants.length){tb.innerHTML='<tr><td colspan="9" class="empty">Aucune societe</td></tr>';return;}
+  tb.innerHTML=tenants.map(function(t){
+    var planCls={free:"gr",pro:"bl",enterprise:"am"}[t.plan]||"gr";
+    var statCls=t.statut==="actif"?"gr":t.statut==="suspendu"?"re":"am";
+    var btnPlan='<select onchange="changePlan(\''+t.id+'\',this.value)" style="background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--t1);font-family:DM Sans,sans-serif;font-size:.74rem;padding:3px 7px;outline:none"><option value="">Plan...</option><option value="free">Free</option><option value="pro">Pro</option><option value="enterprise">Enterprise</option></select>';
+    var btnStat=t.statut==="actif"?'<button class="btn-sm re" onclick="changeStatut(\''+t.id+'\',\'suspendu\')">Suspendre</button>':'<button class="btn-sm gr" onclick="changeStatut(\''+t.id+'\',\'actif\')">Reactiver</button>';
+    return '<tr><td><strong>'+esc(t.nom)+'</strong><div style="font-size:.72rem;color:var(--t2)">'+esc(t.slug)+'</div></td><td style="font-size:.78rem;color:var(--t2)">'+esc(t.email_contact)+'</td><td><span class="bdg '+planCls+'">'+t.plan+'</span></td><td><span class="bdg '+statCls+'">'+t.statut+'</span></td><td style="text-align:center">'+fmt(t.nb_gerants||0)+'</td><td style="text-align:center">'+fmt(t.nb_employes||0)+'</td><td style="text-align:center">'+fmt(t.nb_produits||0)+'</td><td style="color:var(--orange);font-weight:600">'+fmt(t.total_ventes||0)+'</td><td style="display:flex;gap:6px;flex-wrap:wrap">'+btnPlan+btnStat+'</td></tr>';
+  }).join("");
+}
+
+function filterTable(){
+  var q=document.getElementById("search").value.toLowerCase();
+  if(!q){renderTable(ALL_TENANTS);return;}
+  renderTable(ALL_TENANTS.filter(function(t){return (t.nom||"").toLowerCase().indexOf(q)!==-1||(t.email_contact||"").toLowerCase().indexOf(q)!==-1||(t.slug||"").toLowerCase().indexOf(q)!==-1;}));
+}
+
+async function changePlan(tenantId, plan){
+  if(!plan)return;
+  try{await API.patch("tenants",{tenantId:tenantId,plan:plan});await loadData();}
+  catch(err){alert("Erreur : "+err.message);}
+}
+
+async function changeStatut(tenantId, statut){
+  if(!confirm("Confirmer : "+statut+" ?"))return;
+  try{await API.patch("tenants",{tenantId:tenantId,statut:statut});await loadData();}
+  catch(err){alert("Erreur : "+err.message);}
+}
+
+loadData();
+</script>
+</body>
+</html>

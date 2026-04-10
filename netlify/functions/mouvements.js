@@ -64,4 +64,3 @@ export async function handler(event) {
         return jsonResp(405,{error:"Methode non autorisee"});
     } catch(err) { console.error("[mouvements]",err.message); return jsonResp(500,{error:err.message}); }
 }
-

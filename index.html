@@ -1,459 +1,157 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>AquaDash – Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AquaDash - Mon Stock</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:        #FFFBF5;
-  --surface:   #FFFFFF;
-  --surface2:  #FFF5ED;
-  --border:    #E8E0D8;
-  --border2:   rgba(255,107,26,0.2);
-  --orange:    #FF6B1A;
-  --orange-dk: #E05510;
-  --orange-lt: #FFF0E8;
-  --text1:     #1A1A1A;
-  --text2:     #888880;
-  --text3:     #D0CBC4;
-  --green:     #2E7D32;
-  --green-bg:  #EDF7ED;
-  --blue:      #185FA5;
-  --blue-bg:   #E6F1FB;
-  --amber:     #BA7517;
-  --amber-bg:  #FAEEDA;
-  --red:       #A32D2D;
-  --red-bg:    #FCEBEB;
-  --teal:      #0F6E56;
-  --teal-bg:   #E1F5EE;
-  --radius:    14px;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--text1);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-.wrapper { max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
-
-/* ── Header ── */
-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 32px; padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-  animation: fadeDown 0.4s ease both;
-}
-.logo { display: flex; align-items: center; gap: 12px; }
-.logo-icon {
-  width: 42px; height: 42px;
-  background: var(--orange);
-  border-radius: 12px;
-  display: grid; place-items: center;
-  font-size: 20px;
-}
-.logo h1 {
-  font-family: 'Syne', sans-serif;
-  font-size: 1.4rem; font-weight: 800;
-  letter-spacing: -0.5px; color: var(--text1);
-}
-.logo h1 span { color: var(--orange); }
-
-.header-right {
-  display: flex; align-items: center; gap: 10px;
-  flex-wrap: wrap; justify-content: flex-end;
-}
-.user-pill {
-  display: flex; align-items: center; gap: 9px;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 30px; padding: 5px 14px 5px 7px;
-}
-.user-avatar {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: var(--orange);
-  display: grid; place-items: center;
-  font-size: 11px; font-weight: 700; color: #fff;
-}
-.user-name { font-size: 0.82rem; font-weight: 500; color: var(--text1); }
-
-.role-pill {
-  font-size: 0.65rem; font-weight: 700;
-  padding: 3px 9px; border-radius: 20px;
-}
-.role-pill.admin   { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(186,117,23,0.25); }
-.role-pill.gerant  { background: var(--teal-bg);  color: var(--teal);  border: 1px solid rgba(15,110,86,0.25); }
-.role-pill.employe { background: var(--orange-lt);color: var(--orange);border: 1px solid var(--border2); }
-
-.btn-header {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 9px; color: var(--text2);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.78rem; padding: 7px 13px;
-  cursor: pointer; transition: all 0.2s;
-}
-.btn-header:hover { border-color: var(--orange); color: var(--orange); }
-
-/* Bouton Admin (ambre) */
-.btn-header.admin  { border-color: rgba(186,117,23,0.3); color: var(--amber); }
-.btn-header.admin:hover  { background: var(--amber-bg); }
-
-/* Bouton Gérant (teal) */
-.btn-header.gerant { border-color: rgba(15,110,86,0.3); color: var(--teal); }
-.btn-header.gerant:hover { background: var(--teal-bg); }
-
-/* ── Banner ── */
-.access-banner {
-  background: var(--blue-bg);
-  border: 1.5px solid rgba(24,95,165,0.2);
-  border-radius: 10px; padding: 12px 16px;
-  margin-bottom: 20px;
-  font-size: 0.82rem; color: var(--blue);
-  display: none; align-items: center; gap: 10px;
-}
-.access-banner.visible { display: flex; }
-
-/* ── KPIs ── */
-.kpi-bar {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 14px; margin-bottom: 28px;
-  animation: fadeUp 0.4s 0.1s ease both;
-}
-.kpi-card {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 20px;
-  position: relative; overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: default;
-}
-.kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(255,107,26,0.08);
-}
-.kpi-card::after {
-  content: ''; position: absolute;
-  inset: 0 0 auto 0; height: 3px;
-  border-radius: var(--radius) var(--radius) 0 0;
-}
-.kpi-card.green::after  { background: var(--green); }
-.kpi-card.blue::after   { background: var(--blue); }
-.kpi-card.orange::after { background: var(--orange); }
-.kpi-card.red::after    { background: var(--red); }
-
-.kpi-label {
-  font-size: 0.72rem; color: var(--text2);
-  text-transform: uppercase; letter-spacing: 0.06em;
-  margin-bottom: 8px;
-}
-.kpi-value {
-  font-family: 'Syne', sans-serif;
-  font-size: 1.7rem; font-weight: 700; line-height: 1;
-}
-.kpi-card.green  .kpi-value { color: var(--green); }
-.kpi-card.blue   .kpi-value { color: var(--blue); }
-.kpi-card.orange .kpi-value { color: var(--orange); }
-.kpi-card.red    .kpi-value { color: var(--red); }
-.kpi-sub { font-size: 0.72rem; color: var(--text2); margin-top: 4px; }
-.kpi-card.locked { filter: blur(5px); pointer-events: none; opacity: 0.4; }
-
-/* ── Grid ── */
-.grid {
-  display: grid; gap: 20px;
-  grid-template-columns: 1fr 1fr;
-  grid-template-areas:
-    "chart chart"
-    "produits ventes"
-    "alertes alertes";
-}
-@media (max-width: 720px) {
-  .grid {
-    grid-template-columns: 1fr;
-    grid-template-areas: "chart" "alertes" "produits" "ventes";
-  }
-}
-
-/* ── Cards ── */
-.card {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 22px; display: flex;
-  flex-direction: column; gap: 16px;
-  animation: fadeUp 0.4s ease both;
-}
-.card:nth-child(1) { animation-delay: 0.15s; }
-.card:nth-child(2) { animation-delay: 0.25s; }
-.card:nth-child(3) { animation-delay: 0.35s; }
-.card:nth-child(4) { animation-delay: 0.45s; }
-
-.card.locked { position: relative; }
-.card.locked > *:not(.lock-overlay) { opacity: 0.15; pointer-events: none; }
-.lock-overlay {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  border-radius: var(--radius);
-  background: rgba(255,251,245,0.85);
-  backdrop-filter: blur(3px);
-  font-size: 0.82rem; color: var(--text2);
-  text-align: center; padding: 20px;
-  pointer-events: none; line-height: 1.6;
-}
-.card-header { display: flex; align-items: center; justify-content: space-between; }
-.card-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 0.95rem; font-weight: 700;
-  display: flex; align-items: center; gap: 8px;
-  color: var(--text1);
-}
-.card-title .icon {
-  width: 30px; height: 30px; border-radius: 8px;
-  display: grid; place-items: center; font-size: 15px;
-  background: var(--orange-lt);
-  border: 1px solid var(--border2);
-}
-.badge {
-  font-size: 0.68rem; font-weight: 600;
-  padding: 3px 9px; border-radius: 20px;
-  background: var(--surface2); color: var(--text2);
-  border: 1px solid var(--border);
-}
-
-.area-chart    { grid-area: chart; }
-.area-produits { grid-area: produits; }
-.area-ventes   { grid-area: ventes; }
-.area-alertes  { grid-area: alertes; }
-
-.chart-wrap { position: relative; height: 220px; }
-
-/* ── Lists ── */
-.data-list {
-  list-style: none; display: flex;
-  flex-direction: column; gap: 8px;
-  max-height: 320px; overflow-y: auto; padding-right: 4px;
-}
-.data-list::-webkit-scrollbar { width: 4px; }
-.data-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-.data-item {
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: 10px; padding: 12px 14px;
-  display: flex; justify-content: space-between; align-items: center;
-  transition: background 0.15s, border-color 0.15s;
-  animation: fadeIn 0.3s ease both;
-}
-.data-item:hover { background: var(--orange-lt); border-color: var(--border2); }
-.item-left { display: flex; flex-direction: column; gap: 2px; }
-.item-name { font-size: 0.88rem; font-weight: 500; color: var(--text1); }
-.item-sub  { font-size: 0.73rem; color: var(--text2); }
-.item-right {
-  font-family: 'Syne', sans-serif;
-  font-size: 0.92rem; font-weight: 700;
-  color: var(--orange); white-space: nowrap;
-}
-
-/* ── Alerts ── */
-.alert-item {
-  display: flex; align-items: center; gap: 12px;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: 10px; padding: 12px 16px;
-  transition: background 0.15s, border-color 0.15s;
-  animation: fadeIn 0.3s ease both;
-}
-.alert-item:hover { background: var(--orange-lt); border-color: var(--border2); }
-.alert-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.alert-dot.red    { background: var(--red); }
-.alert-dot.orange { background: var(--orange); }
-.alert-dot.yellow { background: var(--amber); }
-.alert-name { font-size: 0.88rem; font-weight: 500; color: var(--text1); }
-.alert-date { font-size: 0.73rem; color: var(--text2); margin-top: 2px; }
-.alert-badge {
-  margin-left: auto; font-size: 0.67rem; font-weight: 700;
-  padding: 3px 9px; border-radius: 20px; flex-shrink: 0;
-}
-.alert-badge.red    { background: var(--red-bg);    color: var(--red); }
-.alert-badge.orange { background: var(--orange-lt); color: var(--orange-dk); }
-.alert-badge.yellow { background: var(--amber-bg);  color: var(--amber); }
-
-/* ── Utils ── */
-.empty-state { padding: 28px; text-align: center; color: var(--text2); font-size: 0.85rem; }
-.spinner {
-  display: inline-block; width: 16px; height: 16px;
-  border: 2px solid var(--border); border-top-color: var(--orange);
-  border-radius: 50%; animation: spin 0.7s linear infinite;
-  margin-right: 8px; vertical-align: middle;
-}
-.btn-refresh {
-  background: var(--surface); border: 1.5px solid var(--border);
-  border-radius: 8px; color: var(--text2);
-  font-size: 0.75rem; font-family: 'DM Sans', sans-serif;
-  padding: 5px 12px; cursor: pointer; transition: all 0.2s;
-  display: flex; align-items: center; gap: 5px;
-}
-.btn-refresh:hover { border-color: var(--orange); color: var(--orange); }
-.live-dot {
-  display: inline-block; width: 7px; height: 7px;
-  border-radius: 50%; background: var(--green);
-  margin-right: 4px; animation: pulse 2s ease infinite;
-}
-
-@keyframes fadeDown { from { opacity:0; transform: translateY(-12px); } to { opacity:1; transform: none; } }
-@keyframes fadeUp   { from { opacity:0; transform: translateY(16px);  } to { opacity:1; transform: none; } }
-@keyframes fadeIn   { from { opacity:0; }                               to { opacity:1; } }
-@keyframes spin     { to { transform: rotate(360deg); } }
-@keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+:root{--bg:#FFFBF5;--s1:#FFF;--s2:#FFF5ED;--border:#E8E0D8;--b2:rgba(255,107,26,.2);--orange:#FF6B1A;--odk:#E05510;--olt:#FFF0E8;--t1:#1A1A1A;--t2:#888880;--t3:#D0CBC4;--green:#2E7D32;--gbg:#EDF7ED;--red:#A32D2D;--rbg:#FCEBEB;--amber:#BA7517;--abg:#FAEEDA;--r:14px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:12px;animation:fd .4s ease both}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:38px;height:38px;background:var(--orange);border-radius:10px;display:grid;place-items:center;font-size:18px}
+.logo h1{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800}
+.logo h1 span{color:var(--orange)}
+.logo .soc{font-size:.72rem;color:var(--t2);margin-top:1px}
+.hright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.user-pill{display:flex;align-items:center;gap:8px;background:var(--s1);border:1.5px solid var(--border);border-radius:30px;padding:4px 13px 4px 6px}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:var(--orange);display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+.user-name{font-size:.8rem;font-weight:500}
+.role-pill{font-size:.63rem;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--olt);color:var(--orange);border:1px solid var(--b2)}
+.btn-h{background:var(--s1);border:1.5px solid var(--border);border-radius:9px;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:.76rem;padding:6px 12px;cursor:pointer;transition:all .2s}
+.btn-h:hover{border-color:var(--orange);color:var(--orange)}
+.kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;animation:fu .4s .1s ease both}
+.kc{background:var(--s1);border:1.5px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden;transition:transform .2s}
+.kc:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,107,26,.08)}
+.kc::after{content:'';position:absolute;inset:0 0 auto 0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kc.or::after{background:var(--orange)}.kc.gr::after{background:var(--green)}.kc.re::after{background:var(--red)}.kc.am::after{background:var(--amber)}
+.kl{font-size:.68rem;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.kv{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;line-height:1}
+.kc.or .kv{color:var(--orange)}.kc.gr .kv{color:var(--green)}.kc.re .kv{color:var(--red)}.kc.am .kv{color:var(--amber)}
+.ks{font-size:.68rem;color:var(--t2);margin-top:3px}
+.card{background:var(--s1);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;animation:fu .4s ease both}
+.card+.card{margin-top:16px}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.ct{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.ct .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:14px;background:var(--olt);border:1px solid var(--b2)}
+.cbdg{font-size:.65rem;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--s2);color:var(--t2);border:1px solid var(--border)}
+.list{list-style:none;display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;padding-right:4px}
+.list::-webkit-scrollbar{width:3px}.list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.item{background:var(--s2);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;transition:background .15s,border-color .15s;animation:fi .3s ease both}
+.item:hover{background:var(--olt);border-color:var(--b2)}
+.il{display:flex;flex-direction:column;gap:2px}
+.iname{font-size:.86rem;font-weight:500}
+.isub{font-size:.71rem;color:var(--t2)}
+.ival{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;color:var(--orange)}
+.alert-row{display:flex;align-items:center;gap:12px;background:var(--s2);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;margin-bottom:8px;animation:fi .3s ease both}
+.adot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.adot.re{background:var(--red)}.adot.or{background:var(--orange)}.adot.am{background:var(--amber)}
+.abdg{margin-left:auto;font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0}
+.abdg.re{background:var(--rbg);color:var(--red)}.abdg.or{background:var(--olt);color:var(--odk)}.abdg.am{background:var(--abg);color:var(--amber)}
+.empty{padding:28px;text-align:center;color:var(--t2);font-size:.83rem}
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+.bas{color:var(--amber);font-size:.68rem}
+@keyframes fd{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<div class="wrapper">
-
+<div class="wrap">
   <header>
     <div class="logo">
       <div class="logo-icon">🐟</div>
-      <h1>Aqua<span>Dash</span></h1>
+      <div><h1>Aqua<span>Dash</span></h1><div class="soc" id="tenant-name"></div></div>
     </div>
-    <div class="header-right">
+    <div class="hright">
       <div class="user-pill">
-        <div class="user-avatar" id="user-avatar">?</div>
-        <span class="user-name" id="user-name">–</span>
-        <span class="role-pill employe" id="user-role-badge">–</span>
+        <div class="user-avatar" id="user-avatar">E</div>
+        <span class="user-name" id="user-name">-</span>
+        <span class="role-pill employe" id="user-role-badge">Employe</span>
       </div>
-
-      <!-- Bouton Admin (visible si admin) -->
-      <button class="btn-header admin" id="btn-admin"
-              style="display:none"
-              onclick="window.location.href='admin.html'">
-        ⚙️ Admin
-      </button>
-
-      <!-- Bouton Gérant (visible si gerant ou admin) -->
-      <button class="btn-header gerant" id="btn-gerant"
-              style="display:none"
-              onclick="window.location.href='gerant.html'">
-        🧊 Chambre froide
-      </button>
-
-      <button class="btn-header" onclick="Auth.logout()">Déconnexion</button>
+      <button class="btn-h" onclick="Auth.logout()">Deconnexion</button>
     </div>
   </header>
 
-  <div class="access-banner" id="access-banner">
-    🔒 Certaines sections sont masquées selon vos droits. Contactez votre responsable pour un accès étendu.
-  </div>
-
-  <!-- KPIs -->
   <div class="kpi-bar">
-    <div class="kpi-card green" id="kpi-card-jour">
-      <div class="kpi-label">Ventes du jour</div>
-      <div class="kpi-value" id="kpi-jour">–</div>
-      <div class="kpi-sub">FCFA aujourd'hui</div>
-    </div>
-    <div class="kpi-card blue" id="kpi-card-total">
-      <div class="kpi-label">Total factures</div>
-      <div class="kpi-value" id="kpi-total">–</div>
-      <div class="kpi-sub">toutes les dates</div>
-    </div>
-    <div class="kpi-card orange">
-      <div class="kpi-label">Produits en stock</div>
-      <div class="kpi-value" id="kpi-produits">–</div>
-      <div class="kpi-sub">références actives</div>
-    </div>
-    <div class="kpi-card red">
-      <div class="kpi-label">Alertes expiration</div>
-      <div class="kpi-value" id="kpi-alertes">–</div>
-      <div class="kpi-sub">à traiter</div>
-    </div>
+    <div class="kc or"><div class="kl">Produits</div><div class="kv" id="kpi-nb">-</div><div class="ks">dans mon congelateur</div></div>
+    <div class="kc gr"><div class="kl">Total stock</div><div class="kv" id="kpi-kg">-</div><div class="ks">kg disponibles</div></div>
+    <div class="kc re"><div class="kl">Alertes</div><div class="kv" id="kpi-al">-</div><div class="ks">expirations proches</div></div>
+    <div class="kc am"><div class="kl">Mis a jour</div><div class="kv" id="kpi-date">-</div><div class="ks">derniere synchro</div></div>
   </div>
 
-  <!-- Grid -->
-  <div class="grid">
-
-    <div class="card area-chart" id="card-chart">
-      <div class="card-header">
-        <div class="card-title"><div class="icon">📊</div>Ventes par jour</div>
-        <button class="btn-refresh" onclick="loadChart()">↻ Actualiser</button>
-      </div>
-      <div class="chart-wrap"><canvas id="chartVentes"></canvas></div>
+  <div class="card">
+    <div class="ch">
+      <div class="ct"><div class="ic">🧊</div>Mon congelateur</div>
+      <span class="cbdg" id="bdg-stock">...</span>
     </div>
-
-    <div class="card area-produits">
-      <div class="card-header">
-        <div class="card-title"><div class="icon">🐟</div>Produits</div>
-        <span class="badge" id="badge-produits">…</span>
-      </div>
-      <ul class="data-list" id="produits">
-        <li class="empty-state"><span class="spinner"></span>Chargement…</li>
-      </ul>
-    </div>
-
-    <div class="card area-ventes" id="card-ventes">
-      <div class="card-header">
-        <div class="card-title"><div class="icon">💰</div>Historique ventes</div>
-        <span class="badge" id="badge-ventes">…</span>
-      </div>
-      <ul class="data-list" id="ventes">
-        <li class="empty-state"><span class="spinner"></span>Chargement…</li>
-      </ul>
-    </div>
-
-    <div class="card area-alertes">
-      <div class="card-header">
-        <div class="card-title"><div class="icon">⚠️</div>Alertes expiration</div>
-        <span class="badge" id="badge-alertes">…</span>
-      </div>
-      <div id="alertes" style="display:flex;flex-direction:column;gap:8px">
-        <div class="empty-state"><span class="spinner"></span>Chargement…</div>
-      </div>
-    </div>
-
+    <ul class="list" id="list-stock">
+      <li class="empty"><span class="spinner"></span>Chargement...</li>
+    </ul>
   </div>
-</div><!-- /wrapper -->
+
+  <div class="card" style="margin-top:16px">
+    <div class="ch">
+      <div class="ct"><div class="ic">⚠️</div>Alertes expiration</div>
+      <span class="cbdg" id="bdg-alertes">...</span>
+    </div>
+    <div id="zone-alertes"><div class="empty"><span class="spinner"></span>Chargement...</div></div>
+  </div>
+</div>
 
 <script src="js/auth.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
 <script>
-// ── Guard + affichage rôle (doit s'exécuter après auth.js) ──
-(function applyRoleButtons() {
-    // 1. Vérifier la session — redirige vers login si absente
-    const session = Auth.requireAuth();
-    if (!session) return;
+var session = Auth.requireAuth();
+if (session && session.role !== "employe") window.location.href = Auth.getHomeByRole(session.role);
+Auth.fillHeader(session);
 
-    // 2. Remplir les infos utilisateur dans le header
-    const initiales = (session.nom || session.email || "U")
-        .split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
+function fmt(n){return Number(n||0).toLocaleString("fr-FR");}
+function fmtD(iso){return iso?new Date(iso).toLocaleDateString("fr-FR"):"-";}
+function esc(s){return String(s||"").replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function diffDays(iso){var d=new Date(iso);d.setHours(0,0,0,0);var t=new Date();t.setHours(0,0,0,0);return(d-t)/86400000;}
 
-    document.getElementById("user-avatar").textContent = initiales;
-    document.getElementById("user-name").textContent   = session.nom || session.email;
+async function loadStock(){
+  try{
+    var data = await API.get("stock","type=employe");
+    var stock = data||[];
+    var totalKg = stock.reduce(function(s,p){return s+Number(p.quantite||0);},0);
+    document.getElementById("kpi-nb").textContent = stock.length;
+    document.getElementById("kpi-kg").textContent = fmt(totalKg)+" kg";
+    document.getElementById("kpi-date").textContent = new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+    document.getElementById("bdg-stock").textContent = stock.length+" produit(s)";
+    if(!stock.length){document.getElementById("list-stock").innerHTML='<li class="empty">Aucun produit dans votre congelateur</li>';return;}
+    document.getElementById("list-stock").innerHTML = stock.map(function(p,i){
+      var bas=Number(p.quantite)<3?'<span class="bas"> ⚠ stock bas</span>':"";
+      return '<li class="item" style="animation-delay:'+(i*40)+'ms"><div class="il"><span class="iname">'+esc(p.produit_nom||p.nom)+bas+'</span><span class="isub">Ref. '+esc(p.reference||"-")+'</span></div><span class="ival">'+fmt(p.quantite)+' kg</span></li>';
+    }).join("");
+    renderAlertes(stock);
+  }catch(err){
+    document.getElementById("list-stock").innerHTML='<li class="empty" style="color:var(--red)">Erreur : '+err.message+'</li>';
+  }
+}
 
-    const badge = document.getElementById("user-role-badge");
-    const roleLabels = { admin:"🔑 Admin", gerant:"📋 Gérant", employe:"👷 Employé" };
-    badge.textContent = roleLabels[session.role] || session.role;
-    badge.className   = "role-pill " + session.role;
+function renderAlertes(stock){
+  var zone=document.getElementById("zone-alertes");
+  var alertes=stock.filter(function(p){if(!p.date_expiration)return false;return diffDays(p.date_expiration)<=2;}).map(function(p){
+    var d=diffDays(p.date_expiration);
+    var type=d<0?"re":d<1?"or":"am";
+    var label=d<0?"Expire":d<1?"Aujourd'hui":"Demain";
+    return {p:p,type:type,label:label};
+  }).sort(function(a,b){var o={re:0,or:1,am:2};return o[a.type]-o[b.type];});
+  document.getElementById("kpi-al").textContent = alertes.length;
+  document.getElementById("bdg-alertes").textContent = alertes.length+" alerte(s)";
+  if(!alertes.length){zone.innerHTML='<div class="empty" style="color:var(--green)">Aucune alerte d\'expiration</div>';return;}
+  zone.innerHTML = alertes.map(function(a,i){
+    return '<div class="alert-row" style="animation-delay:'+(i*50)+'ms"><div class="adot '+a.type+'"></div><div><div style="font-size:.86rem;font-weight:500">'+esc(a.p.produit_nom||a.p.nom)+'</div><div style="font-size:.72rem;color:var(--t2)">Exp. '+fmtD(a.p.date_expiration)+'</div></div><span class="abdg '+a.type+'">'+a.label+'</span></div>';
+  }).join("");
+}
 
-    // 3. Bouton Admin → uniquement admin
-    if (session.role === "admin") {
-        document.getElementById("btn-admin").style.display = "block";
-    }
-
-    // 4. Bouton Gérant → gérant ET admin
-    if (session.role === "gerant" || session.role === "admin") {
-        document.getElementById("btn-gerant").style.display = "block";
-    }
-
-    // 5. Bannière accès restreint → employé uniquement
-    if (session.role === "employe") {
-        document.getElementById("access-banner").classList.add("visible");
-    }
-})();
+loadStock();
 </script>
-<script src="js/app.js"></script>
 </body>
 </html>
